@@ -1,0 +1,75 @@
+---
+type Project = {
+  name: string;
+  description: string;
+  tags: string[];
+  link: string;
+};
+
+export const projects: Project[] = [
+  {
+    name: "subdog",
+    description: "high-concurrency subdomain brute-forcer using async dns.",
+    tags: ["python", "networking"],
+    link: "",
+  },
+  {
+    name: "json-tokenizer",
+    description: "procedural json tokenizer and file reader.",
+    tags: ["c++", "parsers"],
+    link: "",
+  },
+  {
+    name: "rv-emu",
+    description: "tiny risc-v rv32i emulator. boots a usermode binary.",
+    tags: ["c", "cpu"],
+    link: "",
+  },
+  {
+    name: "tmuxd",
+    description: "minimal tmux session manager written in go.",
+    tags: ["go", "cli"],
+    link: "",
+  },
+];
+---
+
+<section class="px-4 md:px-12 lg:px-16 space-y-8">
+  <h1 class="text-foreground/95 text-lg font-semibold"># pinned_projects</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+    {
+      projects.map((project) => (
+        <a href={project.link}>
+          <div class="flex flex-col gap-4 p-4 rounded-lg border border-muted/40 hover:border-muted/70 transition-transform text-foreground">
+            <div>
+              <span class="mr-2 text-muted">$</span>
+              <span>{project.name}</span>
+            </div>
+
+            <p class="text-muted">{project.description}</p>
+
+            <div class="flex flex-wrap gap-2">
+              {project.tags.map((tag) => (
+                <span class="rounded border border-muted/40 bg-muted/10 px-1.5 py-0.75 text-xs text-muted">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </a>
+      ))
+    }
+  </div>
+
+  <a
+    href="/projects"
+    class="hover:underline text-foreground/80 transition-transform duration-300 text-sm ml-1.5"
+    >view all projects ➔</a
+  >
+</section>
+
+<div
+  class="mt-16 mb-14 h-px w-full bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.03)_15%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.03)_85%,transparent_100%)]"
+>
+</div>
