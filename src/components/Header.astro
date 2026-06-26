@@ -11,18 +11,27 @@ const links = [
 ];
 ---
 
-<header class="bg-[#1b1b1b] py-4 px-4 md:px-8 lg:px-12">
+<header
+  class="p-4 md:px-12 lg:px-16
+       fixed top-0 left-0 right-0 z-50
+       bg-background/90
+       backdrop-blur-lg
+       border-b border-border
+       shadow-sm shadow-black/40"
+>
   <nav class="flex items-center justify-between">
-    <div class="h-6 text-(--text)">
+    <div class="h-6 text-foreground/90 tracking-tight">
       <a href="/" class="h-auto">
-        gourav<span class="text-(--muted) hover:text-(--text) transition-colors"
-          >@arch</span
+        gourav<span
+          class="text-foreground/40 hover:text-foreground/70 transition-colors"
         >
+          @arch
+        </span>
       </a>
     </div>
-    <!-- gap: clamp(MIN, PREFERRED - Keep a value that varies with space, MAX); -->
+
     <ul
-      class="hidden md:flex text-(--muted)"
+      class="hidden md:flex text-foreground/50"
       style="gap: clamp(0.5rem, 3vw, 3rem);
       font-size: clamp(0.9rem, 0.5rem + 0.5vw, 1.2rem);"
     >
@@ -35,11 +44,13 @@ const links = [
 
           return (
             <li
-              class={`hover:scale-105 hover:text-(--text) transition-transform duration-300 ease-out ${
-                isActiveLink ? "text-(--text) border-b-2 border-(--text)" : ""
+              class={`hover:scale-105 hover:text-foreground/90 transition-all duration-300 ease-out ${
+                isActiveLink
+                  ? "text-foreground/90 border-b-2 border-foreground/60"
+                  : ""
               }`}
             >
-              <a href={link.href} class="px-1 py-3 ">
+              <a href={link.href} class="px-1 py-3">
                 {link.label}
               </a>
             </li>
@@ -47,17 +58,21 @@ const links = [
         })
       }
     </ul>
+
     <button
       id="menu-toggle"
-      class="md:hidden hover:scale-160 transition-transform text-(--muted) scale-150 hover:text-(--text) cursor-pointer"
-      >☰</button
+      class="rounded-lg border border-border px-2.25 pb-0.5 bg-background/40 md:hidden text-2xl text-foreground/60 hover:text-foreground/90 hover:scale-105 transition-all duration-300 cursor-pointer"
     >
+      ☰
+    </button>
+
     <button
       id="theme-toggle"
       aria-label="Toggle theme"
-      class="hidden md:inline-block text-(--text) cursor-pointer hover:scale-125 scale-110 transition-transform"
-      >☾</button
+      class="hidden rounded-lg border border-border px-2.5 py-0.5 bg-background/40 text-1xl md:inline-block text-foreground/60 hover:text-foreground/90 hover:scale-110 transition-all cursor-pointer"
     >
+      ☾
+    </button>
   </nav>
 </header>
 
