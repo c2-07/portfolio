@@ -8,65 +8,67 @@ type Project = {
 
 export const projects: Project[] = [
   {
+    name: "transferThing",
+    description:
+      "temporary file sharing service with direct uploads and downloads.",
+    tags: ["fastapi", "python", "sqlite"],
+    link: "https://github.com/c2-07/transferthing",
+  },
+  {
+    name: "postOffice",
+    description:
+      "pastebin-style file and text sharing backend built with fastapi.",
+    tags: ["fastapi", "sqlmodel", "sqlite"],
+    link: "https://github.com/c2-07/postOffice",
+  },
+  {
+    name: "wssThing",
+    description: "minimal websocket library in c with tls support.",
+    tags: ["c", "networking"],
+    link: "",
+  },
+  {
     name: "subdog",
     description: "high-concurrency subdomain brute-forcer using async dns.",
     tags: ["python", "networking"],
     link: "",
   },
-  {
-    name: "json-tokenizer",
-    description: "procedural json tokenizer and file reader.",
-    tags: ["c++", "parsers"],
-    link: "",
-  },
-  {
-    name: "rv-emu",
-    description: "tiny risc-v rv32i emulator. boots a usermode binary.",
-    tags: ["c", "cpu"],
-    link: "",
-  },
-  {
-    name: "tmuxd",
-    description: "minimal tmux session manager written in go.",
-    tags: ["go", "cli"],
-    link: "",
-  },
 ];
 ---
 
-<section class="px-4 md:px-12 lg:px-16 space-y-8">
-  <h1 class="text-foreground/95 text-lg font-semibold"># pinned_projects</h1>
+<section class="flex px-4 md:px-12 lg:px-16 gap-8">
+  <div class="flex-1 space-y-8">
+    <h1 class="text-foreground/95 text-lg font-semibold"># pinned_projects</h1>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-    {
-      projects.map((project) => (
-        <a href={project.link}>
-          <div class="flex flex-col gap-4 p-4 rounded-lg border border-muted/40 hover:border-muted/70 transition-transform text-foreground">
-            <div>
-              <span class="mr-2 text-muted">$</span>
-              <span>{project.name}</span>
-            </div>
+    <div class="space-y-8">
+      {
+        projects.map((project) => (
+          <a href={project.link} class="group block text-foreground">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-muted group-hover:text-accent">$</span>
 
-            <p class="text-muted">{project.description}</p>
+              <span class="font-medium">{project.name}</span>
 
-            <div class="flex flex-wrap gap-2">
               {project.tags.map((tag) => (
-                <span class="rounded border border-muted/40 bg-muted/10 px-1.5 py-0.75 text-xs text-muted">
+                <span class="text-xs text-muted border border-muted/30 px-1.5 py-0.5 rounded">
                   {tag}
                 </span>
               ))}
             </div>
-          </div>
-        </a>
-      ))
-    }
-  </div>
 
-  <a
-    href="/projects"
-    class="hover:underline text-foreground/80 transition-transform duration-300 text-sm ml-1.5"
-    >view all projects ➔</a
-  >
+            <p class="mt-2 pl-5 text-muted"> └─ {project.description}</p>
+          </a>
+        ))
+      }
+    </div>
+
+    <a
+      href="/projects"
+      class="hover:underline text-foreground/80 transition-transform duration-300 text-sm ml-1.5"
+      >view all projects ➔</a
+    >
+  </div>
+  <div class="flex-1"></div>
 </section>
 
 <div

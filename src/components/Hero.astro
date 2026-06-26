@@ -1,9 +1,10 @@
 ---
-import cat from "../assets/cat.jpg";
+import UserAvatar from "../assets/cat.jpg";
+import { Image } from "astro:assets";
 ---
 
 <section
-  class="grid grid-cols-1 md:grid-cols-[0.9fr_2.1fr] items-center gap-8 mt-18 md:mt-10 min-h-[clamp(22rem,55vh,36rem)]"
+  class="grid grid-cols-1 md:grid-cols-[0.9fr_2.1fr] items-center gap-8 mt-24 md:mt-16 min-h-[clamp(22rem,50vh,36rem)]"
 >
   <div class="flex justify-center pl-4">
     <div class="relative">
@@ -13,15 +14,17 @@ import cat from "../assets/cat.jpg";
       >
       </div>
 
-      <img
-        src={cat.src}
+      <Image
+        src={UserAvatar}
+        width={320}
+        height={320}
         alt="profile"
-        class="relative h-[clamp(13rem,28vw,18rem)] w-auto rounded-full object-cover border border-foreground/10 hover:scale-[1.03] transition-transform duration-500 ease-out"
+        class="relative h-[clamp(13rem,28vw,18rem)] w-auto rounded-full object-cover border border-foreground/10 hover:scale-[1.03] hover:zoom-[1.03] will-change-transform transition-all duration-300 ease-out"
       />
     </div>
   </div>
 
-  <div class="pl-8 pr-8">
+  <div class="pl-8 pr-8 mt-4 md:mt-1">
     <h1
       class="text-[clamp(2rem,4vw,3.5rem)] font-semibold tracking-tight text-foreground"
     >
@@ -34,12 +37,28 @@ import cat from "../assets/cat.jpg";
     </h2>
 
     <p
-      class="max-w-2xl text-[clamp(1rem,1.2vw,1.15rem)] leading-8 text-foreground/75"
+      class="max-w-2xl text-[1rem] md:text-[1.15rem] leading-8 text-foreground/75"
     >
       hey. i write code in c, c++, go, and python. i am mostly focused on
       lower-level programming, cpu architecture, networking, and building small
       tools that do one thing well.
     </p>
+    <div class="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div class="border-l border-foreground/10 pl-4">
+        <div class="text-foreground/40">$ name</div>
+        <div class="text-foreground/90">gourav</div>
+      </div>
+
+      <div class="border-l border-foreground/10 pl-4">
+        <div class="text-foreground/40">$ editor</div>
+        <div class="text-foreground/90">neovim</div>
+      </div>
+
+      <div class="border-l border-foreground/10 pl-4">
+        <div class="text-foreground/40">$ os</div>
+        <div class="text-foreground/90">macOS</div>
+      </div>
+    </div>
   </div>
 </section>
 
