@@ -74,20 +74,31 @@ const links = [
       ☾
     </button>
   </nav>
+
+  <div
+    id="mobile-menu"
+    class="hidden md:hidden mt-4 border-t border-border pt-4"
+  >
+    <ul class="flex flex-col gap-3 text-foreground/80">
+      {
+        links.map((link) => (
+          <li>
+            <a href={link.href}>{link.label}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
 </header>
 
 <script>
   const menuToggle = document.getElementById("menu-toggle");
-  const themeToggle = document.getElementById("theme-toggle");
 
-  function menuToggleClicked() {} // TODO add Vertical navbar
-  function themeToggleClicked() {} // TODO Setup theme toggle
+  const mobileMenu = document.getElementById("mobile-menu");
 
-  if (menuToggle) {
-    menuToggle.addEventListener("click", menuToggleClicked);
+  function menuToggleClicked() {
+    mobileMenu?.classList.toggle("hidden");
   }
 
-  if (themeToggle) {
-    themeToggle.addEventListener("click", themeToggleClicked);
-  }
+  menuToggle?.addEventListener("click", menuToggleClicked);
 </script>
