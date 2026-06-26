@@ -15,5 +15,9 @@
     "@tailwindcss/vite": "^4.3.1",
     "astro": "^7.0.2",
     "tailwindcss": "^4.3.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.4",
+    "prettier-plugin-astro": "^0.14.1"
   }
 }
