@@ -1,0 +1,78 @@
+---
+// Normalize pathname by removing the trailing slash (except for the root "/")
+const pathname = Astro.url.pathname.replace(/\/$/, "") || "/";
+
+const links = [
+  { href: "/", label: "~/me" },
+  { href: "/projects", label: "~/projects" },
+  { href: "/writings", label: "~/writings" },
+  { href: "/gallery", label: "~/gallery" },
+  { href: "/about", label: "~/about" },
+];
+---
+
+<header class="bg-[#1b1b1b] py-4 px-4 md:px-8 lg:px-12">
+  <nav class="flex items-center justify-between">
+    <div class="h-6 text-(--text)">
+      <a href="/" class="h-auto">
+        gourav<span class="text-(--muted) hover:text-(--text) transition-colors"
+          >@arch</span
+        >
+      </a>
+    </div>
+    <!-- gap: clamp(MIN, PREFERRED - Keep a value that varies with space, MAX); -->
+    <ul
+      class="hidden md:flex text-(--muted)"
+      style="gap: clamp(0.5rem, 3vw, 3rem);
+      font-size: clamp(0.9rem, 0.5rem + 0.5vw, 1.2rem);"
+    >
+      {
+        links.map((link) => {
+          const isActiveLink =
+            link.href === "/"
+              ? pathname === "/"
+              : pathname.startsWith(link.href);
+
+          return (
+            <li
+              class={`hover:scale-105 hover:text-(--text) transition-transform duration-300 ease-out ${
+                isActiveLink ? "text-(--text) border-b-2 border-(--text)" : ""
+              }`}
+            >
+              <a href={link.href} class="px-1 py-3 ">
+                {link.label}
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+    <button
+      id="menu-toggle"
+      class="md:hidden hover:scale-160 transition-transform text-(--muted) scale-150 hover:text-(--text) cursor-pointer"
+      >☰</button
+    >
+    <button
+      id="theme-toggle"
+      aria-label="Toggle theme"
+      class="hidden md:inline-block text-(--text) cursor-pointer hover:scale-125 scale-110 transition-transform"
+      >☾</button
+    >
+  </nav>
+</header>
+
+<script>
+  const menuToggle = document.getElementById("menu-toggle");
+  const themeToggle = document.getElementById("theme-toggle");
+
+  function menuToggleClicked() {} // TODO add Vertical navbar
+  function themeToggleClicked() {} // TODO Setup theme toggle
+
+  if (menuToggle) {
+    menuToggle.addEventListener("click", menuToggleClicked);
+  }
+
+  if (themeToggle) {
+    themeToggle.addEventListener("click", themeToggleClicked);
+  }
+</script>
