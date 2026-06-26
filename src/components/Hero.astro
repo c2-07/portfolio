@@ -3,24 +3,47 @@ import cat from "../assets/cat.jpg";
 ---
 
 <section
-  class="grid grid-cols-1 md:grid-cols-[1fr_2fr] text-(--text) mt-8 h-[clamp(16rem,50vh,32rem)]"
+  class="grid grid-cols-1 md:grid-cols-[0.9fr_2.1fr] items-center gap-8 mt-18 md:mt-10 min-h-[clamp(22rem,55vh,36rem)]"
 >
-  <div class="flex mt-8 justify-center">
-    <img
-      src={cat.src}
-      alt="tux hero icon"
-      class="h-[clamp(12rem,26vw,16rem)] w-auto object-cover rounded-full hover:scale-105 transition-transform duration-300 ease-out"
-    />
+  <div class="flex justify-center pl-4">
+    <div class="relative">
+      <!-- glow -->
+      <div
+        class="absolute inset-0 rounded-full bg-foreground/10 blur-3xl scale-125"
+      >
+      </div>
+
+      <img
+        src={cat.src}
+        alt="profile"
+        class="relative h-[clamp(13rem,28vw,18rem)] w-auto rounded-full object-cover border border-foreground/10 hover:scale-[1.03] transition-transform duration-500 ease-out"
+      />
+    </div>
   </div>
-  <div class="mt-12">
-    <h1 class="text-3xl font-medium tracking-tight">
-      <span class="text-(--muted) mr-4 ml-4">$</span>whoami
+
+  <div class="pl-8 pr-8">
+    <h1
+      class="text-[clamp(2rem,4vw,3.5rem)] font-semibold tracking-tight text-foreground"
+    >
+      <span class="text-foreground/40 mr-3">$</span>
+      whoami
     </h1>
-    <h2 class="text-(--muted) ml-4 text-[1.2rem] mb-4 mt-6"># user.info</h2>
-    <p class="max-w-prose text-base ml-4 leading-relaxed md:text-lg">
+
+    <h2 class="mt-6 mb-4 text-sm uppercase tracking-[0.2em] text-foreground/40">
+      # user.info
+    </h2>
+
+    <p
+      class="max-w-2xl text-[clamp(1rem,1.2vw,1.15rem)] leading-8 text-foreground/75"
+    >
       hey. i write code in c, c++, go, and python. i am mostly focused on
-      lower-level programming, cpu architecture, and building minimal tools.
+      lower-level programming, cpu architecture, networking, and building small
+      tools that do one thing well.
     </p>
-    <dl><dt></dt></dl>
   </div>
 </section>
+
+<div
+  class="mt-8 mb-14 h-px w-full bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.03)_15%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.03)_85%,transparent_100%)]"
+>
+</div>

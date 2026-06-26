@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-foreground: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+}
+
 :root {
   --bg: #121212;
   --surface: #1b1b1b;
