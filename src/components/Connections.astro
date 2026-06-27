@@ -1,18 +1,20 @@
 ---
-const users = [
-  "thatmagicalcat",
-  "duskyelf",
-  "birbuh",
-  "PranavU-Coder",
-  "ani-2008",
-  "infiknighte",
-];
+import Thatmagicalcat from "../assets/avatars/thatmagicalcat.png";
+import Duskyelf from "../assets/avatars/duskyelf.png";
+import PranavUCoder from "../assets/avatars/PranavU-Coder.png";
+import birbuh from "../assets/avatars/birbuh.png";
+import Ani2008 from "../assets/avatars/ani-2008.png";
+import Infiknighte from "../assets/avatars/infiknighte.png";
 
-const connections = users.map((username) => ({
-  username,
-  avatar: `/avatars/${username}.png`,
-  url: `https://github.com/${username}`,
-}));
+import { Image } from "astro:assets";
+const connections = [
+  { username: "thatmagicalcat", img: Thatmagicalcat },
+  { username: "Duskyelf", img: Duskyelf },
+  { username: "PranavU-Coder", img: PranavUCoder },
+  { username: "birbuh", img: birbuh },
+  { username: "ani-2008", img: Ani2008 },
+  { username: "infiknighte", img: Infiknighte },
+];
 ---
 
 <section class="mx-4 md:mx-16 mb-20">
@@ -28,18 +30,17 @@ const connections = users.map((username) => ({
     {
       connections.map((friend) => (
         <a
-          href={friend?.url}
+          href=`https://github.com/${friend.username}`
           target="_blank"
           class="h-16 w-16 relative overflow-hidden border border-border shadow-sm shadow-white/10 hover:scale-105 transition-transform duration-300 ease-out"
         >
           <div class="absolute inset-0 bg-foreground/10 blur-3xl scale-125" />
 
-          <img
+          <Image
             loading="lazy"
             decoding="async"
-            fetchpriority="high"
-            src={friend?.avatar}
-            alt={friend?.username}
+            src={friend.img}
+            alt={friend.username}
             class="h-full w-full object-cover text-muted wrap-break-word hover:scale-110 transition-transform duration-300 ease-out will-change-transform"
           />
         </a>

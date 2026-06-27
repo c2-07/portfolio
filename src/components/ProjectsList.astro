@@ -23,24 +23,22 @@ import { projects } from "../data/projects";
         ls -lh ~/projects
       </h2>
 
-      <span class="inline-block mb-1">projects</span>
+      <span class="inline-block text-muted mb-1">projects</span>
 
       {
-        projects?.map((project, index) => (
-          <div
-            class={`group flex gap-2 border-l ${
-              index !== projects.length - 1
-                ? "pt-4 pb-10"
-                : "border-b pb-4 border-b-muted mb-10"
-            }`}
+        projects?.map((project) => (
+          <a
+            href={project.link}
+            target="_blank"
+            class="group flex gap-2 border-l border-muted/60 ml-1 pt-4  not-last:pb-4"
           >
-            <span class="text-muted group-hover:text-sky-300 select-none">
+            <span class="text-muted group-hover:text-violet-300 select-none">
               ───
             </span>
 
             <div>
               <div class="flex flex-col flex-wrap justify-center">
-                <h3 class="mr-4 font-bold text-foreground/85 transition-all group-hover:text-foreground/90 group-hover:drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">
+                <h3 class="mr-4 font-bold text-foreground/90 transition-all group-hover:text-violet-300 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]">
                   {project.name}
                 </h3>
 
@@ -55,9 +53,14 @@ import { projects } from "../data/projects";
 
               <p class="mt-1 text-sm text-muted">{project.description}</p>
             </div>
-          </div>
+          </a>
         ))
       }
     </div>
   </section>
 </main>
+
+<div
+  class="mt-16 mb-14 h-px w-full bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.03)_15%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.03)_85%,transparent_100%)]"
+>
+</div>
