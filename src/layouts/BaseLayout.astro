@@ -1,0 +1,47 @@
+---
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { ClientRouter } from "astro:transitions";
+
+const { title = "gouravv.tech", description = "My portfolio website" } =
+  Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.jpg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <script>
+      const theme = (() => {
+        const storedTheme = localStorage.getItem("theme");
+
+        if (storedTheme) {
+          return storedTheme;
+        }
+        if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+          return "light";
+        }
+
+        return "dark"; // Default to dark
+      })();
+
+      if (theme === "light") {
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+      }
+      window.localStorage.setItem("theme", theme);
+    </script>
+    <ClientRouter />
+  </head>
+  <body class="bg-(--bg) min-h-screen font-mono flex flex-col pt-24 md:pt-28">
+    <Header />
+    <slot />
+    <Footer />
+  </body>
+</html>
