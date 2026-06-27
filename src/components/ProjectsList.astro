@@ -1,53 +1,5 @@
 ---
-export type project = {
-  name: string;
-  description: string;
-  tags: string[];
-  year: number;
-  status: "completed" | "active" | "archived";
-  link: string;
-};
-
-export const projects: project[] = [
-  {
-    name: "subdog",
-    description:
-      "high-concurrency subdomain brute-forcer with async dns resolution, wildcard detection, and resolver rotation.",
-    tags: ["python", "dns", "networking"],
-    year: 2026,
-    status: "active",
-    link: "https://github.com/example/subdog",
-  },
-  {
-    name: "postoffice",
-    description:
-      "minimal file sharing platform built with fastapi, sqlmodel, and sqlite.",
-    tags: ["python", "fastapi", "backend"],
-    year: 2026,
-    status: "active",
-    link: "https://github.com/example/postoffice",
-  },
-  {
-    name: "transferthing",
-    description:
-      "procedural json tokenizer and file reader written in c without external dependencies.",
-    tags: ["c", "parser", "systems"],
-    year: 2025,
-    status: "completed",
-    link: "https://github.com/example/transferthing",
-  },
-  {
-    name: "wss",
-    description:
-      "tiny websocket library in c with tls support and a minimal event-driven api.",
-    tags: ["c", "websocket", "networking"],
-    year: 2026,
-    status: "active",
-    link: "https://github.com/example/wss",
-  },
-];
-
-const last = projects.length - 1;
+import { projects } from "../data/projects";
 ---
 
 <main class="mx-auto max-w-3xl px-6 text-foreground/80 flex-1">
@@ -74,10 +26,10 @@ const last = projects.length - 1;
       <span class="inline-block mb-1">projects</span>
 
       {
-        projects.map((project, index) => (
+        projects?.map((project, index) => (
           <div
             class={`group flex gap-2 border-l ${
-              index !== last
+              index !== projects.length - 1
                 ? "pt-4 pb-10"
                 : "border-b pb-4 border-b-muted mb-10"
             }`}
@@ -92,7 +44,7 @@ const last = projects.length - 1;
                   {project.name}
                 </h3>
 
-                <div class="mb-2 space-x-2">
+                <div class="mt-2 mb-1 space-x-2">
                   {project.tags.map((tag) => (
                     <span class="rounded border border-muted/30 px-1.5 py-0.5 text-xs text-muted">
                       {tag}
