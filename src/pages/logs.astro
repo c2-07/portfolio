@@ -1,0 +1,17 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PostCard from "../components/PostCard.astro";
+import TerminalHeading from "../components/TerminalHeading.astro";
+---
+
+<BaseLayout
+  title="gourav | logs"
+  description="My thoughts, tutorials, and articles on systems programming."
+>
+  <main class="group mx-auto max-w-3xl flex-1 px-6 text-foreground/80">
+    <section class="mb-8">
+      <TerminalHeading command="git commit log" size="text-2xl" />
+      <div></div>
+    </section>
+  </main>
+</BaseLayout>

@@ -5,9 +5,7 @@ const pathname = Astro.url.pathname.replace(/\/$/, "") || "/";
 const links = [
   { href: "/", label: "~/home" },
   { href: "/projects", label: "~/projects" },
-  { href: "/writings", label: "~/writings" },
-  { href: "/gallery", label: "~/gallery" },
-  { href: "/about", label: "~/about" },
+  { href: "/logs", label: "~/logs" },
 ];
 ---
 
@@ -19,11 +17,11 @@ const links = [
        border-b border-border
        shadow-sm shadow-black/40"
 >
-  <nav class="flex items-center justify-between">
+  <nav class="flex items-center">
     <div class="group h-6 tracking-tight">
       <a
         href="/"
-        class="text-foreground/90 dark:text-foreground/90 transition-all dark:group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] group-hover:drop-shadow-[0_0_10px_rgba(0,0,0,0.3)]"
+        class="font-bold text-foreground/90 dark:text-foreground/90 transition-all dark:group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]"
       >
         gourav
 
@@ -35,48 +33,51 @@ const links = [
       </a>
     </div>
 
-    <ul
-      class="hidden md:flex text-foreground/50"
-      style="gap: clamp(0.5rem, 3vw, 3rem);
-      font-size: clamp(0.9rem, 0.5rem + 0.5vw, 1.2rem);"
-    >
-      {
-        links.map((link) => {
-          const isActiveLink =
-            link.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(link.href);
+    <div class="flex items-center gap-8 ml-auto">
+      <ul
+        class="hidden md:flex text-foreground/50"
+        style="gap: clamp(0.5rem, 3vw, 3rem);
+        font-size: clamp(0.9rem, 0.5rem + 0.5vw, 1.2rem);"
+      >
+        {
+          links.map((link) => {
+            const isActiveLink =
+              link.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(link.href);
 
-          return (
-            <li
-              class={`hover:scale-105 hover:text-foreground/90 transition-all duration-300 ease-out ${
-                isActiveLink
-                  ? "text-foreground/90 border-b-2 border-foreground/60"
-                  : ""
-              }`}
-            >
-              <a href={link.href} class="px-1 py-3">
-                {link.label}
-              </a>
-            </li>
-          );
-        })
-      }
-    </ul>
-    <button
-      id="menu-toggle"
-      class="flex justify-center rounded-lg border border-border h-8 w-8 bg-background/40 md:hidden text-2xl text-foreground/60 hover:text-foreground/90 hover:scale-105 transition-all duration-300 cursor-pointer"
-    >
-      <span id="menu-icon">☰</span>
-    </button>
-
-    <button
-      id="theme-toggle"
-      aria-label="Toggle theme"
-      class="inline-block rounded-lg border border-border px-2.5 py-0.5 bg-background/40 text-xl text-foreground/60 hover:text-foreground/90 hover:scale-110 transition-all cursor-pointer"
-    >
-      ☾
-    </button>
+            return (
+              <li
+                class={`hover:scale-105 hover:text-foreground/90 transition-all duration-300 ease-out ${
+                  isActiveLink
+                    ? "text-foreground/90 border-b-2 border-foreground/60"
+                    : ""
+                }`}
+              >
+                <a href={link.href} class="px-1 py-3">
+                  {link.label}
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+      <div class="flex gap-2">
+        <button
+          id="theme-toggle"
+          aria-label="Toggle theme"
+          class="inline-block rounded-lg border border-border px-2.5 py-0.5 bg-background/40 text-xl text-foreground/60 hover:text-foreground/90 hover:scale-110 transition-all cursor-pointer"
+        >
+          ☾
+        </button>
+        <button
+          id="menu-toggle"
+          class="md:hidden inline-block rounded-lg border border-border px-2 py-0.5 bg-background/40 text-xl text-foreground/60 hover:text-foreground/90 hover:scale-110 transition-all cursor-pointer"
+        >
+          <span id="menu-icon">☰</span>
+        </button>
+      </div>
+    </div>
   </nav>
 
   <div

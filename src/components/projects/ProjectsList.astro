@@ -1,69 +1,31 @@
 ---
+import ProjectCard from "../ProjectCard.astro";
 import { projects } from "../../data/projects";
 ---
 
-<main class="mx-auto max-w-3xl flex-1 px-6 text-foreground/80">
-  <section class="mb-16">
-    <h2 class="text-2xl font-bold text-foreground">
-      <span class="text-muted">$ </span>
-      ls -lh ~/projects
-    </h2>
+<main class="group mx-auto max-w-3xl flex-1 px-6 text-foreground/80">
+  <section class="mb-8">
+    <div class="mb-10">
+      <h1 class="text-2xl font-bold text-foreground mb-4">
+        <span
+          class="text-muted group-hover:text-green-600/80 dark:group-hover:text-green-300 mr-3"
+          >$
+        </span>
+        ls -lh ~/projects
+      </h1>
+    </div>
 
-    <span class="mb-1 inline-block text-muted">projects</span>
-
-    {
-      projects.map((project) => (
-        <article class="group last:[&>div]:pb-0">
-          <div class="flex gap-2 border-l border-muted py-4 pl-px">
-            <span class="select-none text-muted">───</span>
-
-            <div class="flex-1">
-              <a
-                href={project.link}
-                target="_blank"
-                class="font-bold text-foreground/90 transition-all
-                     group-hover:underline
-                     underline-offset-2"
-              >
-                {project.name}
-              </a>
-
-              {project.tags?.length > 0 && (
-                <div class="mt-2 flex flex-wrap gap-2">
-                  {project.tags.map((tag) => (
-                    <span class="rounded border border-muted/30 px-1.5 py-0.5 text-xs text-muted">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {project.description && (
-                <p class="mt-2 text-sm text-muted">{project.description}</p>
-              )}
-            </div>
-          </div>
-        </article>
-      ))
-    }
+    <div class="flex flex-col gap-14">
+      {
+        projects.map((project) => (
+          <ProjectCard
+            name={project.name}
+            link={project.link}
+            tags={project.tags}
+            description={project.description}
+          />
+        ))
+      }
+    </div>
   </section>
 </main>
-
-<style>
-  .half-a-border-on-top {
-    border-top: 1px solid black;
-    position: relative;
-  }
-  .half-a-border-on-top:after {
-    padding: 0;
-    margin: 0;
-    display: block; /* probably not really needed? */
-    content: "";
-    width: 50%;
-    height: 1.1px;
-    background-color: white;
-    position: absolute;
-    right: 0;
-    top: -1px;
-  }
-</style>

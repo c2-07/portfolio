@@ -1,0 +1,35 @@
+---
+interface Props {
+  name: string;
+  description: string;
+  tags: string[];
+  link: string;
+}
+
+const { name, description, tags, link } = Astro.props;
+---
+
+<div class="group/project-link">
+  <div class="flex gap-2">
+    <a draggable="false" href={link} class="text-foreground">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-muted group-hover/project-link:text-accent"> @ </span>
+
+        <span
+          class="font-medium mr-2 group-hover/project-link:underline underline-offset-2"
+        >
+          {name}
+        </span>
+      </div>
+    </a>
+    {
+      tags.map((tag) => (
+        <span class="text-xs text-muted border border-muted/30 px-1.5 py-0.5 rounded">
+          {tag}
+        </span>
+      ))
+    }
+  </div>
+
+  <p class="mt-2 pl-5 text-muted">└─ {description}</p>
+</div>

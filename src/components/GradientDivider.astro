@@ -1,0 +1,17 @@
+---
+interface Props {
+  class?: string;
+  heading?: boolean;
+}
+const { class: className = "", heading: boolean = false } = Astro.props;
+---
+
+<div
+  class:list={[
+    className,
+    "h-px w-full",
+    "dark:bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.03)_15%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.03)_85%,transparent_100%)]",
+    "bg-[linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.03)_15%,rgba(0,0,0,0.12)_50%,rgba(0,0,0,0.03)_85%,transparent_100%)]",
+  ]}
+>
+</div>

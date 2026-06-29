@@ -1,41 +1,25 @@
 ---
+import GradientDivider from "../GradientDivider.astro";
+import TerminalHeading from "../TerminalHeading.astro";
+import ProjectCard from "../ProjectCard.astro";
 import { projects } from "../../data/projects";
 ---
 
 <section class="flex flex-col md:flex-row px-4 md:px-12 lg:px-16 gap-8">
-  <div class="group/projects flex-1 space-y-12">
-    <h1 class="text-foreground/95 text-lg font-semibold">
-      <span
-        class="group-hover/projects:text-green-500 dark:group-hover/projects:text-green-300"
-        >#</span
-      > projects
-    </h1>
+  <div class="group flex-1 space-y-12">
+    <TerminalHeading command="ls projects | head -4" size="text-2xl" />
 
     {
-      projects.slice(0, 4).map((project) => (
-        <div class="group/project-link">
-          <div class="flex gap-2">
-            <a draggable="false" href={project.link} class="text-foreground">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="text-muted group-hover/project-link:text-accent">
-                  $
-                </span>
-
-                <span class="font-medium mr-2 group-hover/project-link:underline underline-offset-2">
-                  {project.name}
-                </span>
-              </div>
-            </a>
-            {project.tags.map((tag) => (
-              <span class="text-xs text-muted border border-muted/30 px-1.5 py-0.5 rounded">
-                {tag}
-              </span>
-            ))}
-          </div>
-
-          <p class="mt-2 pl-5 text-muted"> └─ {project.description}</p>
-        </div>
-      ))
+      projects
+        .slice(0, 4)
+        .map((project) => (
+          <ProjectCard
+            name={project.name}
+            link={project.link}
+            tags={project.tags}
+            description={project.description}
+          />
+        ))
     }
 
     <a
@@ -47,7 +31,4 @@ import { projects } from "../../data/projects";
   <div class="flex-1"></div>
 </section>
 
-<div
-  class="mt-16 mb-14 h-px w-full dark:bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.03)_15%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.03)_85%,transparent_100%)] bg-[linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.03)_15%,rgba(0,0,0,0.12)_50%,rgba(0,0,0,0.03)_85%,transparent_100%)]"
->
-</div>
+<GradientDivider class="my-16" />

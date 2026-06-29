@@ -1,4 +1,5 @@
 ---
+import TerminalHeading from "../TerminalHeading.astro";
 import Thatmagicalcat from "../../assets/avatars/thatmagicalcat.png";
 import Duskyelf from "../../assets/avatars/duskyelf.png";
 import PranavUCoder from "../../assets/avatars/PranavU-Coder.png";
@@ -17,12 +18,13 @@ const connections = [
 ];
 ---
 
-<section class="mx-4 md:mx-16 mb-20">
-  <h1 class="text-foreground/95 text-lg font-semibold">
-    # cool friends <span class="text-muted text-sm"
+<section class="group mx-4 md:mx-16 mb-20">
+  <div class="flex items-center gap-4 text-foreground/95 text-lg font-semibold">
+    <TerminalHeading command="cool friends" size="text-2xl" level="h2" />
+     <span class="text-muted text-sm"
       >- do checkout their stuff</span
     >
-  </h1>
+  </div>
 
   <div
     class="grid grid-cols-[repeat(6,56px)] md:grid-cols-[repeat(6,58px)] auto-rows-[56px] gap-2 mt-4"

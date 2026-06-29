@@ -1,10 +1,12 @@
 ---
+import GradientDivider from "../GradientDivider.astro";
+import TerminalHeading from "../TerminalHeading.astro";
 import UserAvatar from "../../assets/images/cat.jpg";
 import { Image } from "astro:assets";
 ---
 
 <section
-  class="grid grid-cols-1 md:grid-cols-[0.9fr_2.1fr] items-center gap-8 min-h-[clamp(22rem,50vh,36rem)]"
+  class="group grid grid-cols-1 md:grid-cols-[0.9fr_2.1fr] items-center gap-8 min-h-[clamp(22rem,50vh,36rem)]"
 >
   <div class="flex justify-center pl-4">
     <div class="relative">
@@ -25,12 +27,11 @@ import { Image } from "astro:assets";
   </div>
 
   <div class="pl-8 pr-8 mt-4 md:mt-1">
-    <h1
+    <div
       class="text-[clamp(2rem,3vw,3rem)] font-semibold tracking-tight text-foreground"
     >
-      <span class="text-foreground/40 mr-3">$</span>
-      whoami
-    </h1>
+      <TerminalHeading command="whoami" level="h1" size="text-4xl" />
+    </div>
 
     <h2
       class="mt-6 mb-4 text-[12px] md:text-sm uppercase tracking-[0.2em] text-foreground/40"
@@ -60,7 +61,7 @@ import { Image } from "astro:assets";
       >
         <span
           class="dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] drop-shadow-[0_0_8px_rgba(0,0,0,0.2)] dark:text-zinc-400 text-zinc-600"
-          >$
+          >>
         </span> github
       </a>
 
@@ -73,7 +74,7 @@ import { Image } from "astro:assets";
            dark:hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.35)] hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.35)]
            transition-all duration-300"
       >
-        <span class="dark:text-blue-400 text-blue-600">$ </span>linkedin
+        <span class="dark:text-blue-400 text-blue-600">> </span>linkedin
       </a>
 
       <a
@@ -85,13 +86,10 @@ import { Image } from "astro:assets";
            dark:hover:drop-shadow-[0_0_12px_rgba(52,211,153,0.35)] hover:drop-shadow-[0_0_12px_rgba(52,211,153,0.35)]
            transition-all duration-300"
       >
-        <span class="dark:text-emerald-400 text-emerald-600">$ </span>resume
+        <span class="dark:text-emerald-400 text-emerald-600">> </span>resume
       </a>
     </div>
   </div>
 </section>
 
-<div
-  class="mt-6 mb-14 h-px w-full dark:bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.03)_15%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.03)_85%,transparent_100%)] bg-[linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.03)_15%,rgba(0,0,0,0.12)_50%,rgba(0,0,0,0.03)_85%,transparent_100%)]"
->
-</div>
+<GradientDivider class="my-16" />
