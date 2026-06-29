@@ -8,6 +8,8 @@
     "dist"
   ],
   "compilerOptions": {
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "strictNullChecks": true,
+    "allowJs": true
   }
 }
