@@ -1,2 +1,3 @@
 # Portfolio
-Shitty portfolio with lots of glowing effects :<
+
+Shitty portfolio with lots of glowing effects >:
