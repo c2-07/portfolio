@@ -14,7 +14,7 @@ const links = [
 <header
   class="p-4 md:px-12 lg:px-16
        fixed top-0 left-0 right-0 z-50
-       bg-background/90
+       bg-background/80
        backdrop-blur-lg
        border-b border-border
        shadow-sm shadow-black/40"
@@ -23,12 +23,12 @@ const links = [
     <div class="group h-6 tracking-tight">
       <a
         href="/"
-        class="text-foreground/90 transition-all group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]"
+        class="text-foreground/90 dark:text-foreground/90 transition-all dark:group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] group-hover:drop-shadow-[0_0_10px_rgba(0,0,0,0.3)]"
       >
         gourav
 
         <span
-          class="text-foreground/40 transition-all group-hover:text-zinc-100"
+          class="text-foreground/40 transition-all dark:group-hover:text-zinc-100 group-hover:text-zinc-900"
         >
           @arch
         </span>
@@ -73,7 +73,7 @@ const links = [
     <button
       id="theme-toggle"
       aria-label="Toggle theme"
-      class="hidden rounded-lg border border-border px-2.5 py-0.5 bg-background/40 textjxl md:inline-block text-foreground/60 hover:text-foreground/90 hover:scale-110 transition-all cursor-pointer"
+      class="inline-block rounded-lg border border-border px-2.5 py-0.5 bg-background/40 text-xl text-foreground/60 hover:text-foreground/90 hover:scale-110 transition-all cursor-pointer"
     >
       ☾
     </button>
@@ -129,4 +129,27 @@ const links = [
 
   menuToggle?.addEventListener("click", toggleMenu);
   menuOverlay?.addEventListener("click", toggleMenu);
+
+  document.addEventListener("astro:page-load", () => {
+    const themeToggle = document.getElementById("theme-toggle");
+
+    function updateThemeIcon() {
+      if (themeToggle) {
+        themeToggle.textContent = document.documentElement.classList.contains(
+          "dark",
+        )
+          ? "☼"
+          : "☾";
+      }
+    }
+
+    updateThemeIcon();
+
+    themeToggle?.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      const isDark = document.documentElement.classList.contains("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      updateThemeIcon();
+    });
+  });
 </script>

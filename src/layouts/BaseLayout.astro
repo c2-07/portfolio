@@ -10,13 +10,29 @@ const { title = "gouravv.tech", description = "My portfolio website" } =
 
 <html lang="en">
   <head>
+    <ClientRouter />
     <meta charset="utf-8" />
     <link rel="icon" href="/favicon.jpg" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
-    <ClientRouter />
+    <script is:inline>
+      const theme =
+        localStorage.getItem("theme") ??
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+
+      document.documentElement.classList.toggle("dark", theme === "dark");
+
+      localStorage.setItem("theme", theme);
+
+      document.addEventListener("astro:after-swap", () => {
+        document.documentElement.classList.toggle(
+          "dark",
+          localStorage.getItem("theme") === "dark",
+        );
+      });
+    </script>
   </head>
   <body class="bg-(--bg) min-h-screen font-mono flex flex-col pt-24 md:pt-28">
     <Header />
