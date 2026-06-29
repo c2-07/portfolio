@@ -9,20 +9,20 @@
   --color-accent: var(--accent);
 }
 
-:light {
+:root {
+  --bg: #fafaf9;
+  --surface: #fafafa;
+  --border: #e5e5e5;
+  --text: #171717;
+  --muted: #737373;
+  --accent: #2563eb;
+}
+
+.dark {
   --bg: #121212;
   --surface: #1b1b1b;
   --border: #262626;
   --text: #e5e5e5;
   --muted: #868686;
   --accent: #60a5fa;
-}
-
-.root {
-  --bg: #ffffff;
-  --surface: #fafafa;
-  --border: #e5e5e5;
-  --text: #171717;
-  --muted: #737373;
-  --accent: #2563eb;
 }
