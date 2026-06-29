@@ -9,7 +9,7 @@
   --color-accent: var(--accent);
 }
 
-:root {
+:light {
   --bg: #121212;
   --surface: #1b1b1b;
   --border: #262626;
@@ -18,7 +18,7 @@
   --accent: #60a5fa;
 }
 
-.light {
+.root {
   --bg: #ffffff;
   --surface: #fafafa;
   --border: #e5e5e5;
