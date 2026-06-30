@@ -1,7 +1,11 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LogsPostCard from "../components/LogsPostCard.astro";
-import TerminalHeading from "../components/TerminalHeading.astro";
+import TerminalHeading from "../components/ui/TerminalHeading.astro";
+
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("blog");
 ---
 
 <BaseLayout
@@ -9,20 +13,22 @@ import TerminalHeading from "../components/TerminalHeading.astro";
   description="My thoughts, tutorials, and articles on systems programming."
 >
   <main
-    class="group space-y-8 mx-auto mb-8 max-w-3xl flex-1 px-6 text-foreground/80"
+    class="group mx-auto mb-8 max-w-3xl flex-1 space-y-8 px-6 text-foreground/80"
   >
     <TerminalHeading command="ls logs" size="text-2xl" />
+
     <div class="space-y-8">
-      <LogsPostCard
-        title="File Descriptors"
-        description="I’m pretty sure if you have been coding in C or any other low-level Programming
-    Language you must have stumbled across the term `File Descriptors` , But what
-    they heck are they? Let’s take a deep dive and find out.
-"
-        tags={["c", "os", "python"]}
-        uploadDate={new Date()}
-        link=""
-      />
+      {
+        posts.map((post) => (
+          <LogsPostCard
+            title={post.data.title}
+            description={post.data.description}
+            uploadDate={post.data.pubDate}
+            tags={post.data.tags}
+            link={`/blog/${post.id}`}
+          />
+        ))
+      }
     </div>
   </main>
 </BaseLayout>
