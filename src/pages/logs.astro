@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import PostCard from "../components/PostCard.astro";
+import LogsPostCard from "../components/LogsPostCard.astro";
 import TerminalHeading from "../components/TerminalHeading.astro";
 ---
 
@@ -13,31 +13,15 @@ import TerminalHeading from "../components/TerminalHeading.astro";
   >
     <TerminalHeading command="ls logs" size="text-2xl" />
     <div class="space-y-8">
-      <PostCard
+      <LogsPostCard
         title="File Descriptors"
         description="I’m pretty sure if you have been coding in C or any other low-level Programming
     Language you must have stumbled across the term `File Descriptors` , But what
     they heck are they? Let’s take a deep dive and find out.
 "
         tags={["c", "os", "python"]}
-      />
-
-      <PostCard
-        title="File Descriptors"
-        description="I’m pretty sure if you have been coding in C or any other low-level Programming
-    Language you must have stumbled across the term `File Descriptors` , But what
-    they heck are they? Let’s take a deep dive and find out.
-"
-        tags={["c", "os"]}
-      />
-
-      <PostCard
-        title="File Descriptors"
-        description="I’m pretty sure if you have been coding in C or any other low-level Programming
-    Language you must have stumbled across the term `File Descriptors` , But what
-    they heck are they? Let’s take a deep dive and find out.
-"
-        tags={["c", "os"]}
+        uploadDate={new Date()}
+        link=""
       />
     </div>
   </main>
