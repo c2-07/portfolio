@@ -3,9 +3,15 @@ interface Props {
   command: string;
   level?: "h1" | "h2" | "h3";
   size?: string;
+  divider?: boolean;
 }
 
-const { command, level = "h2", size = "text-2xl" } = Astro.props;
+const {
+  command,
+  level = "h2",
+  size = "text-2xl",
+  divider = false,
+} = Astro.props;
 
 const Tag = level;
 ---

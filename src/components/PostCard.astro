@@ -1,17 +1,30 @@
 ---
+import TagList from "./TagList.astro";
+interface Props {
+  title: string;
+  description: string;
+  uploadDate?: Date;
+  tags: string[];
+}
 
+const { title, description, uploadDate, tags } = Astro.props;
 ---
 
-<main class="group mx-auto max-w-3xl flex-1 px-6 text-foreground/80">
-  <section class="mb-8">
-    <div class="mb-10">
-      <h1 class="text-2xl font-bold text-foreground mb-4">
-        <span
-          class="text-muted group-hover:text-green-600/80 dark:group-hover:text-green-300 mr-3"
-          >$
-        </span>
-        ls -lh ~/blogs
-      </h1>
-    </div>
-  </section>
-</main>
+<div class:list={["border border-muted/20 p-8", "group/post mb-8 space-y-4"]}>
+  <div class="flex items-center gap-8">
+    <h1 class="space-x-2 text-foreground text-[16px] font-semibold">
+      <span class="group-hover/post:text-blue-300 text-muted">%</span>
+      <span class="group-hover/post:underline underline-offset-2">
+        {title}
+      </span>
+    </h1>
+
+    <TagList tags={tags} />
+
+    <span class="block text-xs text-muted/70 ml-auto">Jun 20, 2026</span>
+  </div>
+
+  <p class="text-muted text-sm">
+    {description}
+  </p>
+</div>

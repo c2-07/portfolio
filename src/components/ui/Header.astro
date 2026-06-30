@@ -3,9 +3,9 @@
 const pathname = Astro.url.pathname.replace(/\/$/, "") || "/";
 
 const links = [
-  { href: "/", label: "~/home" },
-  { href: "/projects", label: "~/projects" },
-  { href: "/logs", label: "~/logs" },
+  { href: "/", label: "home" },
+  { href: "/projects", label: "projects" },
+  { href: "/logs", label: "logs" },
 ];
 ---
 
@@ -93,7 +93,7 @@ const links = [
               : pathname.startsWith(link.href);
 
           return (
-            <li>
+            <li class="flex justify-end">
               <a href={link.href} class={isActiveLink ? "text-foreground" : ""}>
                 {link.label}
               </a>

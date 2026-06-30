@@ -8,10 +8,37 @@ import TerminalHeading from "../components/TerminalHeading.astro";
   title="gourav | logs"
   description="My thoughts, tutorials, and articles on systems programming."
 >
-  <main class="group mx-auto max-w-3xl flex-1 px-6 text-foreground/80">
-    <section class="mb-8">
-      <TerminalHeading command="git commit log" size="text-2xl" />
-      <div></div>
-    </section>
+  <main
+    class="group space-y-8 mx-auto mb-8 max-w-3xl flex-1 px-6 text-foreground/80"
+  >
+    <TerminalHeading command="ls logs" size="text-2xl" />
+    <div class="space-y-8">
+      <PostCard
+        title="File Descriptors"
+        description="I’m pretty sure if you have been coding in C or any other low-level Programming
+    Language you must have stumbled across the term `File Descriptors` , But what
+    they heck are they? Let’s take a deep dive and find out.
+"
+        tags={["c", "os", "python"]}
+      />
+
+      <PostCard
+        title="File Descriptors"
+        description="I’m pretty sure if you have been coding in C or any other low-level Programming
+    Language you must have stumbled across the term `File Descriptors` , But what
+    they heck are they? Let’s take a deep dive and find out.
+"
+        tags={["c", "os"]}
+      />
+
+      <PostCard
+        title="File Descriptors"
+        description="I’m pretty sure if you have been coding in C or any other low-level Programming
+    Language you must have stumbled across the term `File Descriptors` , But what
+    they heck are they? Let’s take a deep dive and find out.
+"
+        tags={["c", "os"]}
+      />
+    </div>
   </main>
 </BaseLayout>

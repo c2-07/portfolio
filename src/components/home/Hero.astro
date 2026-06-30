@@ -30,7 +30,12 @@ import { Image } from "astro:assets";
     <div
       class="text-[clamp(2rem,3vw,3rem)] font-semibold tracking-tight text-foreground"
     >
-      <TerminalHeading command="whoami" level="h1" size="text-4xl" />
+      <TerminalHeading
+        command="whoami"
+        level="h1"
+        size="text-4xl"
+        divider={true}
+      />
     </div>
 
     <h2
