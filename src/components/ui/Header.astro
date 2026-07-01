@@ -112,27 +112,29 @@ const links = [
 </div>
 
 <script>
-  const menuToggle = document.getElementById("menu-toggle");
-  const menuOverlay = document.getElementById("menu-overlay");
-  const mobileMenu = document.getElementById("mobile-menu");
-  const menuIcon = document.getElementById("menu-icon");
-
-  function toggleMenu() {
-    mobileMenu?.classList.toggle("hidden");
-    menuOverlay?.classList.toggle("hidden");
-
-    if (menuIcon) {
-      menuIcon.textContent = mobileMenu?.classList.contains("hidden")
-        ? "☰"
-        : "✕";
-    }
-  }
-
-  menuToggle?.addEventListener("click", toggleMenu);
-  menuOverlay?.addEventListener("click", toggleMenu);
-
   document.addEventListener("astro:page-load", () => {
+    const menuToggle = document.getElementById("menu-toggle");
+    const menuOverlay = document.getElementById("menu-overlay");
+    const mobileMenu = document.getElementById("mobile-menu");
+    const menuIcon = document.getElementById("menu-icon");
     const themeToggle = document.getElementById("theme-toggle");
+
+    function toggleMenu() {
+      mobileMenu?.classList.toggle("hidden");
+      menuOverlay?.classList.toggle("hidden");
+
+      if (menuIcon) {
+        menuIcon.textContent = mobileMenu?.classList.contains("hidden")
+          ? "☰"
+          : "✕";
+      }
+    }
+
+    if (menuToggle && menuOverlay) {
+      menuToggle.onclick = toggleMenu;
+      menuOverlay.onclick = toggleMenu;
+    }
+    menuOverlay?.addEventListener("click", toggleMenu);
 
     function updateThemeIcon() {
       if (themeToggle) {
@@ -146,11 +148,17 @@ const links = [
 
     updateThemeIcon();
 
-    themeToggle?.addEventListener("click", () => {
-      document.documentElement.classList.toggle("dark");
-      const isDark = document.documentElement.classList.contains("dark");
-      localStorage.setItem("theme", isDark ? "dark" : "light");
-      updateThemeIcon();
-    });
+    if (themeToggle) {
+      themeToggle.onclick = () => {
+        document.documentElement.classList.toggle("dark");
+        localStorage.setItem(
+          "theme",
+          document.documentElement.classList.contains("dark")
+            ? "dark"
+            : "light",
+        );
+        updateThemeIcon();
+      };
+    }
   });
 </script>
