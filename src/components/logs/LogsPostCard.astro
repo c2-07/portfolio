@@ -1,0 +1,42 @@
+---
+import TagList from "../ui/TagList.astro";
+import FormattedDate from "../ui/FormattedDate.astro";
+interface Props {
+  title: string;
+  description: string;
+  uploadDate: Date;
+  tags: string[];
+  link: string;
+}
+
+const { title, description, uploadDate, tags, link } = Astro.props;
+---
+
+<a href={link} class="p-4 group/post mb-8 space-y-6 cursor-pointer">
+  <div class="items-center space-y-8">
+    <div class="flex items-center gap-6">
+      <h2 class="space-x-2 text-foreground text-[16px] font-semibold">
+        <span class="group-hover/post:text-blue-300 text-muted">%</span>
+        <span class="group-hover/post:underline underline-offset-2">
+          {title}
+        </span>
+      </h2>
+
+      <TagList tags={tags} />
+
+      <FormattedDate
+        date={uploadDate}
+        monthFormat="long"
+        class="block text-xs text-muted/60 ml-auto"
+      />
+    </div>
+
+    <p class="text-muted/70 text-sm">
+      {
+        description.length > 160
+          ? description.slice(0, 160) + "..."
+          : description
+      }
+    </p>
+  </div>
+</a>

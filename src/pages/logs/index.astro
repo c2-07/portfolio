@@ -1,0 +1,37 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import LogsPostCard from "../../components/logs/LogsPostCard.astro";
+import TerminalHeading from "../../components/ui/TerminalHeading.astro";
+
+import { getCollection } from "astro:content";
+
+// INFO: getCollection => promise<Post[]> (async)
+const posts = (await getCollection("blog")).sort(
+  (a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf(),
+);
+---
+
+<BaseLayout
+  title="gourav | logs"
+  description="My thoughts, tutorials, and articles on systems programming."
+>
+  <main
+    class="group mx-auto mb-8 max-w-3xl flex-1 space-y-8 px-6 text-foreground/80"
+  >
+    <TerminalHeading command="ls logs" size="text-2xl" />
+
+    <div class="space-y-8">
+      {
+        posts.map((post) => (
+          <LogsPostCard
+            title={post.data.title}
+            description={post.data.description}
+            uploadDate={post.data.pubDate}
+            tags={post.data.tags}
+            link={`/logs/${post.id}`}
+          />
+        ))
+      }
+    </div>
+  </main>
+</BaseLayout>
