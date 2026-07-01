@@ -1,0 +1,23 @@
+---
+interface Props {
+  href: string;
+  command?: string;
+  class?: string;
+}
+
+const { href, command = "cd ..", class: className = "" } = Astro.props;
+---
+
+<a
+  href={href}
+  class:list={[
+    "inline-flex items-center text-sm font-mono text-muted hover:text-foreground transition-colors group/back",
+    className,
+  ]}
+>
+  <span
+    class="mr-2 text-accent group-hover/back:-translate-x-1 transition-transform duration-300"
+    >&lt;-</span
+  >
+  {command}
+</a>

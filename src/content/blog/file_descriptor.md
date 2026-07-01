@@ -1,7 +1,8 @@
 ---
 title: "File Descriptors"
 description: "What are file descriptors, why does Unix treat everything as a file, and how does the kernel keep track of them?"
-uploadDate: JUNE 18, 2025
+pubDate: "Jul 08 2022"
+updateDate: "Jul 08 2022"
 tags: ["c", "operating systems"]
 ---
 
@@ -34,7 +35,7 @@ The operating system needs to store much more than just a file's location. It ne
 
 **The System’s Representation of Open Files**
 
-![image.png](File%20Descriptors/image.png)
+![image.png](../../assets/images/blog/file-descriptor/image.png)
 
 1. **Per-process File Descriptor Table (Left-most column)**
 
@@ -65,7 +66,6 @@ Process A             Process B
 ```
 
 <aside>
-💡
 
 Think of this like a browser having multiple tabs open — each tab number maps to a specific website, but different users can have tabs pointing to the same website.
 
@@ -83,7 +83,6 @@ Each entry includes:
 - **Pointer to Inode**: it doesn’t store full file details, just points to where the actual info is (in the inode).
 
 <aside>
-💡
 
 Think of it like a checkout counter at a library — it doesn’t store the books, just tracks what’s checked out, by who, and where they are in reading.
 
@@ -103,13 +102,12 @@ Each inode entry has:
 - Possibly other stuff like timestamps, owner, etc.
 
 <aside>
-💡
 
 Basically, this is the file’s “identity card” in the OS. One inode per file.
 
 </aside>
 
-### **🧠 Mental Model — 3 Tables**
+### **Mental Model — 3 Tables**
 
 | **Layer**           | **Owned By**         | **What it stores**                                      |
 | ------------------- | -------------------- | ------------------------------------------------------- |
@@ -119,7 +117,7 @@ Basically, this is the file’s “identity card” in the OS. One inode per fil
 
 ---
 
-### **🧩 How Everything Works Together (Real Example)**
+### **How Everything Works Together (Real Example)**
 
 Let’s say **Process A** and **Process B** both want to read the same file: /tmp/log.txt.
 
@@ -144,7 +142,7 @@ Here’s how it plays out step-by-step:
   - **Reference count** (number of FDs pointing here)
   - **Pointer to the file’s inode**
 
-🧠 Offset quick example:
+Offset quick example:
 
 > If you read 100 bytes, the offset moves forward — next read picks up where the last one ended.
 
@@ -161,7 +159,7 @@ Here’s how it plays out step-by-step:
 
 ---
 
-### **🧠 Inherited FDs via**
+### **Inherited FDs via**
 
 ### **fork()**
 
@@ -177,7 +175,7 @@ This means:
 
 ---
 
-### **🧠 Duplicating FDs with dup()/dup2()**
+### **Duplicating FDs with dup()/dup2()**
 
 Sometimes you want **multiple FDs** pointing to the same file in the same process.
 
@@ -193,7 +191,7 @@ int new_fd = dup(old_fd);   // duplicates old_fd
 
 ---
 
-### **⚠️ Max FDs per process (`ulimit -n`)**
+### **Max FDs per process (`ulimit -n`)**
 
 Every process can only open a limited number of FD’s at once.
 
@@ -214,7 +212,7 @@ Solutions:
 
 ---
 
-### **🔒 Concurrency & File Locking**
+### **Concurrency & File Locking**
 
 If **multiple processes** are reading and writing the same file — things can get messy fast.
 
@@ -233,7 +231,7 @@ This ensures only one process can write at a time.
 
 ---
 
-### **🧠 Important Behavior**
+### **Important Behavior**
 
 - If both processes **share the same Open File Table entry**:
   - They share the **offset** and **access mode**
@@ -245,7 +243,7 @@ This ensures only one process can write at a time.
 
 ---
 
-### **🧹 When One Process Closes the File**
+### **When One Process Closes the File**
 
 1. The FD is removed from that process’s FD table
 2. The Open File Table’s **reference count is decremented**

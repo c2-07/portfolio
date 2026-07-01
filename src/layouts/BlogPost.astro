@@ -1,0 +1,143 @@
+---
+import { type CollectionEntry } from "astro:content";
+import TagList from "../components/ui/TagList.astro";
+import BaseLayout from "./BaseLayout.astro";
+import TerminalHeading from "../components/ui/TerminalHeading.astro";
+import GradientDivider from "../components/ui/GradientDivider.astro";
+import BackLink from "../components/ui/BackLink.astro";
+import FormattedDate from "../components/ui/FormattedDate.astro";
+
+type Props = CollectionEntry<"blog">["data"];
+const { title, description, pubDate, updatedDate, tags } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <main
+    class="group mx-auto mb-16 max-w-3xl flex-1 space-y-8 px-6 text-foreground/80"
+  >
+    <div class="mb-4">
+      <BackLink href="/logs" command="cd logs/.." />
+    </div>
+    <article>
+      <header class="mb-8">
+        <TerminalHeading
+          command={`cat ${title.toLowerCase().replace(/\s+/g, "-")}.md`}
+          level="h1"
+          size="text-3xl"
+        />
+        <div class="mt-4 flex items-center space-x-4 text-sm text-muted">
+          <FormattedDate date={pubDate} />
+          {
+            updatedDate && (
+              <span class="italic text-muted/70">
+                (Updated: <FormattedDate date={updatedDate} />)
+              </span>
+            )
+          }
+        </div>
+        <div class="mt-4">
+          <TagList tags={tags} />
+        </div>
+      </header>
+
+      <GradientDivider class="my-8" />
+
+      <div
+        class="markdown-content space-y-6 text-[1rem] leading-8 text-foreground/80"
+      >
+        <slot />
+      </div>
+    </article>
+  </main>
+</BaseLayout>
+
+<style is:global>
+  .markdown-content h1,
+  .markdown-content h2,
+  .markdown-content h3,
+  .markdown-content h4 {
+    color: var(--color-foreground);
+    font-weight: 600;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+  }
+  .markdown-content h1 {
+    font-size: 2.25rem;
+  }
+  .markdown-content h2 {
+    font-size: 1.875rem;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.5rem;
+  }
+  .markdown-content h3 {
+    font-size: 1.5rem;
+  }
+  .markdown-content a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    transition: opacity 0.2s;
+  }
+  .markdown-content a:hover {
+    opacity: 0.8;
+  }
+  .markdown-content p {
+    margin-bottom: 1.25rem;
+  }
+  .markdown-content ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .markdown-content ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .markdown-content li {
+    margin-bottom: 0.5rem;
+  }
+  .markdown-content code {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.375rem;
+    font-size: 0.875em;
+    font-family: inherit; /* using the global font-mono */
+  }
+  .markdown-content pre {
+    background-color: #0d0d0d !important; /* GitHub dark dim */
+    border: 1px solid var(--color-border);
+    padding: 1.25rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .markdown-content pre code {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    font-size: 0.875em;
+    color: #e0e7ee;
+  }
+  .markdown-content blockquote {
+    border-left: 4px solid var(--color-accent);
+    padding-left: 1rem;
+    color: var(--color-muted);
+    font-style: italic;
+    margin-bottom: 1.25rem;
+    background-color: var(--color-surface);
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+  .markdown-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    margin: 1.5rem 0;
+  }
+</style>
