@@ -1,0 +1,36 @@
+---
+interface Props {
+  links: { href: string; label: string }[];
+  pathname: string;
+}
+
+const { links, pathname } = Astro.props;
+---
+
+<ul
+  class="hidden md:flex text-foreground/50"
+  style="gap: clamp(0.5rem, 3vw, 3rem); font-size: clamp(0.9rem, 0.5rem + 0.5vw, 1.2rem);"
+>
+  {
+    links.map((link) => {
+      const isActiveLink =
+        link.href === "/"
+          ? pathname === "/"
+          : pathname.startsWith(link.href);
+
+      return (
+        <li
+          class={`hover:scale-105 hover:text-foreground/90 transition-all duration-300 ease-out ${
+            isActiveLink
+              ? "text-foreground underline-offset-8 underline decoration-2"
+              : ""
+          }`}
+        >
+          <a href={link.href} class="px-1 py-3">
+            {link.label}
+          </a>
+        </li>
+      );
+    })
+  }
+</ul>

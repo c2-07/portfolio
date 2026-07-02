@@ -1,0 +1,36 @@
+---
+---
+<button
+  id="theme-toggle"
+  aria-label="Toggle theme"
+  class="inline-block rounded-lg border border-border px-2.5 py-0.5 bg-background/40 text-xl text-foreground/60 hover:text-foreground/90 hover:scale-110 transition-all cursor-pointer"
+>
+  ☾
+</button>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const themeToggle = document.getElementById("theme-toggle");
+
+    function updateThemeIcon() {
+      if (themeToggle) {
+        themeToggle.textContent = document.documentElement.classList.contains("dark")
+          ? "☼"
+          : "☾";
+      }
+    }
+
+    updateThemeIcon();
+
+    if (themeToggle) {
+      themeToggle.onclick = () => {
+        document.documentElement.classList.toggle("dark");
+        localStorage.setItem(
+          "theme",
+          document.documentElement.classList.contains("dark") ? "dark" : "light"
+        );
+        updateThemeIcon();
+      };
+    }
+  });
+</script>

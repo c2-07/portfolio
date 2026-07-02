@@ -1,0 +1,30 @@
+---
+import { Image } from "astro:assets";
+import UserAvatar from "../../assets/images/cat.jpg";
+---
+
+<div class="group h-8 tracking-tight">
+  <a
+    href="/"
+    class="flex items-center gap-3 font-bold text-foreground/90 dark:text-foreground/90 transition-all"
+  >
+    <Image
+      src={UserAvatar}
+      width={32}
+      height={32}
+      alt="profile"
+      class="h-8 w-8 rounded-full object-cover border border-foreground/10"
+    />
+    <span
+      class="transition-all duration-300 dark:group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]"
+    >
+      gourav
+
+      <span
+        class="text-foreground/40 transition-all dark:group-hover:text-zinc-100 group-hover:text-zinc-900"
+      >
+        @arch
+      </span>
+    </span>
+  </a>
+</div>
