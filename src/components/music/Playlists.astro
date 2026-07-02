@@ -1,0 +1,68 @@
+---
+import TerminalHeading from "../ui/TerminalHeading.astro";
+import playlistsData from "../../data/playlists.json";
+
+// Only show visible playlists and sort them by tracks descending
+const displayPlaylists = playlistsData
+  .filter((p) => p.show !== false)
+  .sort((a, b) => b.tracks - a.tracks);
+---
+
+<section class="group mt-16 w-full">
+  <div class="mb-8">
+    <TerminalHeading command="playlists" size="text-2xl" />
+  </div>
+
+  {
+    displayPlaylists.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {displayPlaylists.map((playlist) => (
+          <a
+            href={playlist.url}
+            target="_blank"
+            class="flex items-center gap-4 rounded-xl border border-border/50 bg- from-background to-muted/5 p-3 shadow-sm transition-all duration-300 hover:border-foreground/30 hover:bg-muted/10 group"
+          >
+            <div class="size-14 shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted/20 shadow-sm transition-colors group-hover:border-foreground/30">
+              {playlist.local_image ? (
+                <img
+                  src={playlist.local_image}
+                  alt={playlist.name}
+                  class="size-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0"
+                />
+              ) : playlist.original_image ? (
+                <img
+                  src={playlist.original_image}
+                  alt={playlist.name}
+                  class="size-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0"
+                />
+              ) : (
+                <div class="flex size-full items-center justify-center text-muted/40">
+                  <span class="text-xl">♪</span>
+                </div>
+              )}
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <h3 class="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-foreground/80">
+                {playlist.name}
+              </h3>
+              <p class="mt-1 truncate text-[10px] font-mono uppercase tracking-widest text-muted/60">
+                {playlist.tracks} {playlist.tracks === 1 ? "Track" : "Tracks"}
+              </p>
+            </div>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <div class="rounded-xl border border-border/50 bg-muted/5 p-8 text-center">
+        <span class="mb-4 inline-block text-4xl grayscale contrast-200 opacity-80">
+          ♪
+        </span>
+        <h2 class="mb-2 text-xl font-semibold">No Public Playlists</h2>
+        <p class="text-sm text-muted/60">
+          You don't have any visible playlists configured yet.
+        </p>
+      </div>
+    )
+  }
+</section>

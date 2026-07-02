@@ -1,0 +1,66 @@
+---
+import { getAccessToken } from "../../lib/spotify";
+
+let profile = {
+  name: "ness",
+  image: "https://i.scdn.co/image/ab6775700000ee859e4ec9c3f0071a7e721f1462",
+  url: "https://open.spotify.com/user/315hw5ucgnpf62prautrmshc6kza",
+  followers: 5,
+};
+
+try {
+  const { access_token } = await getAccessToken();
+  if (access_token) {
+    const res = await fetch("https://api.spotify.com/v1/me", {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      profile.name = data.display_name;
+      if (data.images && data.images.length > 0) {
+        profile.image = data.images[0].url;
+      }
+      if (data.external_urls && data.external_urls.spotify) {
+        profile.url = data.external_urls.spotify;
+      }
+      if (data.followers) {
+        profile.followers = data.followers.total;
+      }
+    }
+  }
+} catch (e) {
+  console.error("Failed to fetch Spotify profile", e);
+}
+---
+
+<section class="flex w-full h-full">
+  <a
+    href={profile.url}
+    target="_blank"
+    class="flex w-full h-full items-center gap-3 rounded-2xl border border-border/50 bg-linear-to-tr from-background to-muted/5 p-4 shadow-sm transition-all duration-500 hover:border-foreground/30 justify-center"
+  >
+    <div
+      class="size-12 shrink-0 overflow-hidden rounded-full border border-border/50 shadow-sm transition-colors group-hover:border-foreground/30"
+    >
+      <img
+        src={profile.image}
+        alt={profile.name}
+        class="size-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0"
+      />
+    </div>
+
+    <div class="min-w-0">
+      <h3 class="truncate font-bold text-foreground">
+        {profile.name}
+      </h3>
+
+      <p
+        class="truncate text-xs font-mono uppercase tracking-widest text-muted/60"
+      >
+        <span class="group-hover:text-green-400 duration-300 transition-colors">
+          Spotify
+        </span>
+      </p>
+    </div>
+  </a>
+</section>

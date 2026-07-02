@@ -1,0 +1,32 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import NowPlaying from "../components/music/NowPlaying.astro";
+import TerminalHeading from "../components/ui/TerminalHeading.astro";
+import SpotifyProfile from "../components/music/SpotifyProfile.astro";
+import Playlists from "../components/music/Playlists.astro";
+---
+
+<BaseLayout
+  title="gourav | Music"
+  description="My Spotify listening activity and playlists."
+>
+  <div class="w-full flex-1 text-foreground/80 mb-16">
+    <div class="group">
+      <TerminalHeading command="now playing" size="text-2xl" />
+      <div
+        class="flex flex-col items-stretch md:flex-row gap-4 md:gap-6 mt-8 mb-12"
+      >
+        <div class="flex-[3] flex">
+          <NowPlaying />
+        </div>
+        <div class="flex-1 flex">
+          <SpotifyProfile />
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <Playlists />
+    </div>
+  </div>
+</BaseLayout>

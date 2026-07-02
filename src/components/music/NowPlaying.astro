@@ -1,0 +1,226 @@
+---
+
+---
+
+<section class="group w-full h-full">
+  <div
+    class="border border-border/50 hover:border-[#1DB954]/30 rounded-2xl p-4 transition-all duration-500 bg-linear-to-br from-background to-muted/5 shadow-sm h-full flex flex-col justify-center"
+  >
+    <div class="flex items-center gap-4">
+      <!-- Album Art -->
+      <div
+        class="relative h-16 w-16 md:h-20 md:w-20 shrink-0 rounded-xl overflow-hidden bg-muted/10 border border-border/50 shadow-sm"
+      >
+        <img
+          id="spotify-album-art"
+          src=""
+          alt="Album Art"
+          class="absolute inset-0 w-full h-full object-cover hidden transition-opacity duration-500"
+        />
+        <div
+          id="spotify-placeholder"
+          class="absolute inset-0 flex items-center justify-center text-muted/30"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-music"
+            ><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"
+            ></circle><circle cx="18" cy="16" r="3"></circle></svg
+          >
+        </div>
+      </div>
+
+      <!-- Song Info -->
+      <div class="flex-1 min-w-0 flex flex-col justify-center">
+        <div
+          id="spotify-status-indicator"
+          class="flex items-center text-green-400 gap-1.5 mb-1 text-[11px] font-bold uppercase tracking-wide transition-colors"
+        >
+          <span id="spotify-icon" class="hidden text-sm leading-none">♪</span>
+          <span id="spotify-status-text">Not Playing</span>
+        </div>
+
+        <a
+          id="spotify-title"
+          href="#"
+          target="_blank"
+          class="text-foreground font-semibold truncate text-base hover:text-foreground/80 transition-colors pointer-events-none"
+        >
+          Offline
+        </a>
+        <p id="spotify-artist" class="text-muted/70 text-sm truncate mt-0.5">
+          Spotify
+        </p>
+      </div>
+
+      <!-- Dynamic Link Icon -->
+      <a
+        id="spotify-link"
+        href="#"
+        target="_blank"
+        class="shrink-0 p-3 text-muted/30 hover:text-foreground transition-colors pointer-events-none rounded-full hover:bg-muted/10"
+        aria-label="Open Song"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="h-5 w-5"
+          ><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+          ></path><polyline points="15 3 21 3 21 9"></polyline><line
+            x1="10"
+            y1="14"
+            x2="21"
+            y2="3"></line></svg
+        >
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  let intervalId: number | null = null;
+
+  function updateUI(data: any, isLive: boolean) {
+    const albumArt = document.getElementById(
+      "spotify-album-art",
+    ) as HTMLImageElement;
+    const placeholder = document.getElementById("spotify-placeholder");
+    const title = document.getElementById("spotify-title") as HTMLAnchorElement;
+    const artist = document.getElementById("spotify-artist");
+    const statusText = document.getElementById("spotify-status-text");
+    const statusIndicator = document.getElementById("spotify-status-indicator");
+    const icon = document.getElementById("spotify-icon");
+    const link = document.getElementById("spotify-link") as HTMLAnchorElement;
+
+    if (!albumArt) return;
+
+    albumArt.src = data.albumImageUrl;
+    albumArt.classList.remove("hidden");
+    placeholder?.classList.add("hidden");
+
+    title.textContent = data.title;
+    title.href = data.songUrl;
+    title.classList.remove("pointer-events-none");
+
+    if (artist) artist.textContent = data.artist;
+
+    if (isLive) {
+      if (statusText) statusText.textContent = "Listening to Spotify";
+      icon?.classList.remove("hidden");
+      statusIndicator?.classList.remove("text-muted/50");
+      statusIndicator?.classList.add("text-foreground");
+    } else {
+      if (statusText) statusText.textContent = "Recently Played";
+      icon?.classList.remove("hidden");
+      statusIndicator?.classList.remove("text-foreground");
+      statusIndicator?.classList.add("text-muted/50");
+    }
+
+    link.href = data.songUrl;
+    link.classList.remove("pointer-events-none");
+  }
+
+  function setOfflineUI() {
+    const albumArt = document.getElementById(
+      "spotify-album-art",
+    ) as HTMLImageElement;
+    const placeholder = document.getElementById("spotify-placeholder");
+    const title = document.getElementById("spotify-title") as HTMLAnchorElement;
+    const artist = document.getElementById("spotify-artist");
+    const statusText = document.getElementById("spotify-status-text");
+    const statusIndicator = document.getElementById("spotify-status-indicator");
+    const icon = document.getElementById("spotify-icon");
+    const link = document.getElementById("spotify-link") as HTMLAnchorElement;
+
+    if (!albumArt) return;
+
+    albumArt.classList.add("hidden");
+    placeholder?.classList.remove("hidden");
+
+    title.textContent = "Not Playing";
+    title.href = "#";
+    title.classList.add("pointer-events-none");
+
+    if (artist) artist.textContent = "Spotify";
+
+    if (statusText) statusText.textContent = "Offline";
+    icon?.classList.add("hidden");
+    statusIndicator?.classList.remove("text-foreground");
+    statusIndicator?.classList.add("text-muted/50");
+
+    link.href = "#";
+    link.classList.add("pointer-events-none");
+  }
+
+  async function fetchNowPlaying() {
+    try {
+      const res = await fetch("/api/now-playing");
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data.isPlaying) {
+        localStorage.setItem(
+          "spotify-last-played",
+          JSON.stringify({
+            title: data.title,
+            artist: data.artist,
+            albumImageUrl: data.albumImageUrl,
+            songUrl: data.songUrl,
+          }),
+        );
+        updateUI(data, true);
+      } else {
+        const cached = localStorage.getItem("spotify-last-played");
+        if (cached) {
+          updateUI(JSON.parse(cached), false);
+        } else {
+          setOfflineUI();
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // Handle Astro view transitions safely
+  document.addEventListener("astro:page-load", () => {
+    // Only run if the component is actually on the current page
+    if (document.getElementById("spotify-album-art")) {
+      // Hydrate instantly from cache to prevent UI flash
+      const cached = localStorage.getItem("spotify-last-played");
+      if (cached) {
+        updateUI(JSON.parse(cached), false);
+      }
+
+      // Fetch live data
+      fetchNowPlaying();
+
+      if (intervalId) clearInterval(intervalId);
+      // Fetch every 10 seconds for real-time updates
+      intervalId = setInterval(fetchNowPlaying, 10000) as unknown as number;
+    }
+  });
+
+  document.addEventListener("astro:before-preparation", () => {
+    // Clean up interval when navigating away
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  });
+</script>
