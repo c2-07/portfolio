@@ -3,13 +3,17 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/home/Hero.astro";
 import PinnedProjects from "../components/home/PinnedProjects.astro";
 import Connections from "../components/home/Connections.astro";
+import CurrentlyWorkingOn from "../components/ui/CurrentlyWorkingOn.astro";
 ---
 
 <BaseLayout
   title="gourav | Home"
   description="hey, my name's gourav. i enjoy writing code in c, c++, go, and python."
 >
-  <Hero />
-  <PinnedProjects />
-  <Connections />
+  <main class="mx-auto w-full flex-1 text-foreground/80">
+    <Hero />
+    <CurrentlyWorkingOn />
+    <PinnedProjects />
+    <Connections />
+  </main>
 </BaseLayout>

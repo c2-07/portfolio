@@ -3,8 +3,8 @@ import ProjectCard from "../ui/ProjectCard.astro";
 import { projects } from "../../data/projects";
 ---
 
-<main class="group mx-auto max-w-3xl flex-1 px-6 text-foreground/80">
-  <section class="mb-8">
+<section class="group mx-auto w-full flex-1 text-foreground/80">
+  <div class="mb-8">
     <div class="mb-10">
       <h1 class="text-2xl font-bold text-foreground mb-4">
         <span
@@ -15,7 +15,7 @@ import { projects } from "../../data/projects";
       </h1>
     </div>
 
-    <div class="flex flex-wrap flex-col gap-10">
+    <div class="flex flex-wrap flex-col gap-4">
       {
         projects.map((project) => (
           <ProjectCard
@@ -27,5 +27,5 @@ import { projects } from "../../data/projects";
         ))
       }
     </div>
-  </section>
-</main>
+  </div>
+</section>

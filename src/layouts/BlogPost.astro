@@ -12,9 +12,7 @@ const { title, description, pubDate, updatedDate, tags } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
-  <main
-    class="group mx-auto mb-16 max-w-3xl flex-1 space-y-8 px-6 text-foreground/80"
-  >
+  <main class="group mx-auto mb-16 w-full flex-1 space-y-8 text-foreground/80">
     <div class="mb-4">
       <BackLink href="/logs" command="cd logs/.." />
     </div>
@@ -123,7 +121,7 @@ const { title, description, pubDate, updatedDate, tags } = Astro.props;
     color: #e0e7ee;
   }
   .markdown-content blockquote {
-    border-left: 4px solid var(--color-accent);
+    border-left: 4px solid var(--color-foreground);
     padding-left: 1rem;
     color: var(--color-muted);
     font-style: italic;

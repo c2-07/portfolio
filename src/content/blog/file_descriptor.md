@@ -181,7 +181,7 @@ Sometimes you want **multiple FDs** pointing to the same file in the same proces
 
 That’s what dup() and dup2() do:
 
-```
+```c
 int new_fd = dup(old_fd);   // duplicates old_fd
 ```
 
@@ -197,7 +197,7 @@ Every process can only open a limited number of FD’s at once.
 
 This limit can be seen with:
 
-```
+```bash
 ulimit -n
 ```
 
@@ -223,7 +223,7 @@ Solution: **file locking**
 
 Use tools like:
 
-```
+```c
 flock(fd, LOCK_EX);
 ```
 
