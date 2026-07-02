@@ -5,10 +5,10 @@ import ProjectCard from "../ui/ProjectCard.astro";
 import { projects } from "../../data/projects";
 ---
 
-<section class="flex flex-col md:flex-row px-4 md:px-12 lg:px-16 gap-8">
-  <div class="group flex-1 space-y-12">
-    <TerminalHeading command="ls projects | head -4" size="text-2xl" />
+<section class="group space-y-8">
+  <TerminalHeading command="projects" size="text-2xl" />
 
+  <div class="space-y-4">
     {
       projects
         .slice(0, 4)
@@ -21,14 +21,13 @@ import { projects } from "../../data/projects";
           />
         ))
     }
-
-    <a
-      href="/projects"
-      class="hover:underline text-foreground/80 transition-transform duration-300 text-sm ml-1.5"
-      >view all projects ➔</a
-    >
   </div>
-  <div class="flex-1"></div>
+
+  <a
+    href="/projects"
+    class="hover:underline text-foreground/80 transition-transform duration-300 text-sm ml-1.5"
+    >view all projects ➔</a
+  >
 </section>
 
 <GradientDivider class="my-16" />

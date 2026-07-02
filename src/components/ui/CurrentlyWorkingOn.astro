@@ -1,0 +1,46 @@
+---
+import TerminalHeading from "./TerminalHeading.astro";
+import TagList from "./TagList.astro";
+
+const tags = ["Building", "Designing"];
+---
+
+<section class="group mb-16 px-4 md:px-0">
+  <TerminalHeading command="currently working on" size="text-2xl" />
+
+  <div
+    class="mt-8 border border-border/50 hover:border-foreground/20 p-4 transition-colors relative"
+  >
+    <div class="absolute top-5 right-5">
+      <span class="relative flex h-2.5 w-2.5">
+        <span
+          class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
+        ></span>
+        <span
+          class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"
+        ></span>
+      </span>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+      <div class="flex flex-wrap items-center gap-2 text-foreground">
+        <span class="text-muted/70">@</span>
+        <h3 class="font-medium mr-2">Work in Progress</h3>
+      </div>
+    </div>
+
+    <p class="mt-2 pl-6 text-muted/80 text-sm md:text-base">
+      └─ Building something awesome right now!
+    </p>
+
+    <div class="mt-4 flex items-center flex-wrap gap-2 pl-6">
+      <TagList tags={tags} />
+      <a
+        href="https://github.com/c2-07"
+        target="_blank"
+        class="ml-auto text-muted/70 hover:text-foreground text-sm transition-colors"
+        >[ github ]</a
+      >
+    </div>
+  </div>
+</section>
