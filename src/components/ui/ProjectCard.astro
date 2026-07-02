@@ -10,31 +10,33 @@ interface Props {
 const { name, description, tags, link } = Astro.props;
 ---
 
-<a href={link} class="group/project-link">
-  <div
-    class="flex flex-col sm:flex-row gap-2 sm:items-center transition-colors duration-300"
-  >
-    <div class="text-foreground">
-      <div
-        class="flex flex-wrap items-center gap-2 group-hover/project-link:text-accent"
-      >
-        <span class="text-muted/70 group-hover/project-link:text-accent">
-          @
-        </span>
-
-        <span
-          class="font-medium mr-2 group-hover/project-link:underline underline-offset-2"
+<div>
+  <a href={link} class="group/project-link">
+    <div
+      class="flex flex-col sm:flex-row gap-2 sm:items-center transition-colors duration-300"
+    >
+      <div class="text-foreground">
+        <div
+          class="flex flex-wrap items-center gap-2 group-hover/project-link:text-accent"
         >
-          {name}
-        </span>
+          <span class="text-muted/70 group-hover/project-link:text-accent">
+            @
+          </span>
+
+          <span
+            class="font-medium mr-2 group-hover/project-link:underline underline-offset-2"
+          >
+            {name}
+          </span>
+        </div>
+      </div>
+      <div class="ml-4">
+        <TagList tags={tags} />
       </div>
     </div>
-    <div class="ml-4">
-      <TagList tags={tags} />
-    </div>
-  </div>
 
-  <p class="mt-2 pl-5 text-muted/80 group-hover/project-link:text-muted">
-    └─ {description}
-  </p>
-</a>
+    <p class="mt-2 pl-5 text-muted/80 group-hover/project-link:text-muted">
+      └─ {description}
+    </p>
+  </a>
+</div>
