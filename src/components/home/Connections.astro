@@ -19,11 +19,9 @@ const connections = [
 ---
 
 <section class="group mx-4 md:mx-16 mb-20">
-  <div class="flex flex-col sm:flex-row sm:items-center gap-4 text-foreground/95 text-lg font-semibold">
+  <div class="flex flex-col gap-4 text-foreground/95 text-lg font-semibold">
     <TerminalHeading command="cool friends" size="text-2xl" level="h2" />
-     <span class="text-muted sm:text-sm text-[10px]"
-      >- do checkout their stuff</span
-    >
+    <span class="text-muted text-sm">- do checkout their stuff :)</span>
   </div>
 
   <div
@@ -32,7 +30,7 @@ const connections = [
     {
       connections.map((friend) => (
         <a
-          href=`https://github.com/${friend.username}`
+          href={`https://github.com/${friend.username}`}
           target="_blank"
           class="h-16 w-16 relative overflow-hidden border border-border shadow-sm dark:shadow-white/10 shadow-black/10 hover:scale-105 transition-transform duration-300 ease-out"
         >
