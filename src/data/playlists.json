@@ -222,7 +222,7 @@
     "tracks": 19,
     "original_image": "https://mosaic.scdn.co/640/ab67616d00001e021f39759cb6bd0d771be2bf6cab67616d00001e022cd55246d935a8a77cb4859eab67616d00001e026b219c8d8462bfe254a20469ab67616d00001e02aaa91bd34ff8c15be91f373e",
     "local_image": "/images/playlists/2kYnaGpW1DyoaLCB4yRMd2.jpg",
-    "show": true
+    "show": false
   },
   {
     "id": "2PLmY6x8Y6T4pP0msrlBIA",
@@ -231,7 +231,7 @@
     "tracks": 19,
     "original_image": "https://mosaic.scdn.co/640/ab67616d00001e024f95e3698ebb8fdeda1033eeab67616d00001e025d7bc36977cc3c924a433d5bab67616d00001e02ee25496d91ee4d75234767f9ab67616d00001e02fc02906ca7a31e6ab97d5c9f",
     "local_image": "/images/playlists/2PLmY6x8Y6T4pP0msrlBIA.jpg",
-    "show": true
+    "show": false
   },
   {
     "id": "6WZTu4QKRIJizw0fgCL3Ro",
@@ -342,4 +342,3 @@
     "show": false
   }
 ]
-
