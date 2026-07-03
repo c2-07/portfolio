@@ -24,14 +24,20 @@ export const getAccessToken = async () => {
 
 export const getNowPlaying = async () => {
   if (!client_id || !client_secret || !refresh_token) {
+    console.error("Missing Spotify environment variables");
     return null;
   }
 
-  const { access_token } = await getAccessToken();
+  const token = await getAccessToken();
+
+  if (!token.access_token) {
+    console.error(token);
+    return null;
+  }
 
   return fetch(NOW_PLAYING_ENDPOINT, {
     headers: {
-      Authorization: `Bearer ${access_token}`,
+      Authorization: `Bearer ${token.access_token}`,
     },
   });
 };

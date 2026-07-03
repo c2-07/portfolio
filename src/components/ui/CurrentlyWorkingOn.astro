@@ -5,7 +5,7 @@ import TagList from "./TagList.astro";
 const tags = ["Building", "Designing"];
 ---
 
-<section class="group mb-16 px-4 md:px-0">
+<section class="group mb-16 md:px-0">
   <TerminalHeading command="currently working on" size="text-2xl" />
 
   <div
@@ -23,15 +23,13 @@ const tags = ["Building", "Designing"];
     </div>
 
     <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
-      <div class="flex flex-wrap items-center gap-2 text-foreground">
-        <span class="text-muted/70">@</span>
-        <h3 class="font-medium mr-2">Work in Progress</h3>
+      <div class="flex flex-wrap items-center gap-4 text-foreground">
+        <span class="text-muted/70 group-hover:text-accent">@</span>
+        <h3 class="font-medium">Shiki</h3>
       </div>
     </div>
 
-    <p class="mt-2 pl-6 text-muted/80 text-sm md:text-base">
-      └─ Building something awesome right now!
-    </p>
+    <p class="mt-2 pl-6 text-muted/80 text-sm md:text-base">└─ Web Based OS</p>
 
     <div class="mt-4 flex items-center flex-wrap gap-2 pl-6">
       <TagList tags={tags} />
