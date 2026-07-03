@@ -24,7 +24,7 @@
     "tracks": 160,
     "original_image": "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000d72cbd9eb87577ba28210777219f",
     "local_image": "/images/playlists/2ouSEFGbaSSF3KesvLYUav.jpg",
-    "show": true
+    "show": false
   },
   {
     "id": "5SM2QKDjMnY2eF0BLvqFkH",
@@ -33,7 +33,7 @@
     "tracks": 98,
     "original_image": "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da842506b0c188e7cd235c95d816",
     "local_image": "/images/playlists/5SM2QKDjMnY2eF0BLvqFkH.jpg",
-    "show": true
+    "show": false
   },
   {
     "id": "62Jk5PIDBglnmuOokP3toM",
@@ -78,7 +78,7 @@
     "tracks": 51,
     "original_image": "https://mosaic.scdn.co/640/ab67616d00001e0221f22393aa9fd4b1fc929841ab67616d00001e02600eb82c33ca23660364036fab67616d00001e028471bff5344bd04f60ac834aab67616d00001e029710bad94c41354e854b6567",
     "local_image": "/images/playlists/3dyVK0RR357VUJiqzdBbHD.jpg",
-    "show": true
+    "show": false
   },
   {
     "id": "6PdBVEW91K7cpLUQZcyzKl",
@@ -96,7 +96,7 @@
     "tracks": 50,
     "original_image": "https://mosaic.scdn.co/640/ab67616d00001e020aa18b1730c272f627df8145ab67616d00001e020b3992daec21f481da524d10ab67616d00001e02dbb9ac1c09f64e701410ec03ab67616d00001e02e08c6424d6fc7f7be09d8317",
     "local_image": "/images/playlists/5J9LzhozD1b5JWPzLWEmEQ.jpg",
-    "show": true
+    "show": false
   },
   {
     "id": "3QQmplqWF6GG82SVmX5JpC",
@@ -177,7 +177,7 @@
     "tracks": 29,
     "original_image": "https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da84f939986ed556122519eff472",
     "local_image": "/images/playlists/6zvUqLxzaOaxPrR6x1YLsm.jpg",
-    "show": true
+    "show": false
   },
   {
     "id": "7HVvYj2W8xdimjhefP0gLu",
@@ -195,7 +195,7 @@
     "tracks": 23,
     "original_image": "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da84e6c0d344cd928f5367a8a3af",
     "local_image": "/images/playlists/13T5yII0rjSFQmScP3W6ie.jpg",
-    "show": true
+    "show": false
   },
   {
     "id": "2w5mO2Q5mS9NkUXazAlgKE",
@@ -204,7 +204,7 @@
     "tracks": 22,
     "original_image": "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da8477e25fc6b25f072689212c4d",
     "local_image": "/images/playlists/2w5mO2Q5mS9NkUXazAlgKE.jpg",
-    "show": true
+    "show": false
   },
   {
     "id": "2opInkGbo1byPzgwym4Nbf",
@@ -342,3 +342,4 @@
     "show": false
   }
 ]
+
