@@ -21,9 +21,9 @@ const displayPlaylists = playlistsData
           <a
             href={playlist.url}
             target="_blank"
-            class="flex items-center gap-4 rounded-xl border border-border/50 bg- from-background to-muted/5 p-3 shadow-sm transition-all duration-300 hover:border-foreground/30 hover:bg-muted/10 group"
+            class="group/card flex items-center gap-4 rounded-xl border border-border/50 bg- from-background to-muted/5 p-3 shadow-sm transition-all duration-300 hover:border-foreground/30 hover:bg-muted/10"
           >
-            <div class="size-14 shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted/20 shadow-sm transition-colors group-hover:border-foreground/30">
+            <div class="size-14 shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted/20 shadow-sm transition-colors group-hover/card:border-foreground/30">
               {playlist.local_image ? (
                 <Image
                   src={playlist.local_image}
@@ -32,7 +32,7 @@ const displayPlaylists = playlistsData
                   height={56}
                   format="webp"
                   quality={70}
-                  class="size-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0"
+                  class="size-full object-cover grayscale transition-all duration-500 group-hover/card:grayscale-0"
                 />
               ) : playlist.original_image ? (
                 <Image
@@ -41,7 +41,7 @@ const displayPlaylists = playlistsData
                   width={56}
                   height={56}
                   format="webp"
-                  class="size-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0"
+                  class="size-full object-cover grayscale transition-all duration-500 group-hover/card:grayscale-0"
                 />
               ) : (
                 <div class="flex size-full items-center justify-center text-muted/40">
@@ -51,7 +51,7 @@ const displayPlaylists = playlistsData
             </div>
 
             <div class="min-w-0 flex-1">
-              <h3 class="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-foreground/80">
+              <h3 class="truncate text-sm font-semibold text-foreground transition-colors group-hover/card:text-foreground/80">
                 {playlist.name}
               </h3>
               <p class="mt-1 truncate text-[10px] font-mono uppercase tracking-widest text-muted/60">
