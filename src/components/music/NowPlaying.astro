@@ -174,23 +174,11 @@
       const data = await res.json();
 
       if (data.isPlaying) {
-        localStorage.setItem(
-          "spotify-last-played",
-          JSON.stringify({
-            title: data.title,
-            artist: data.artist,
-            albumImageUrl: data.albumImageUrl,
-            songUrl: data.songUrl,
-          }),
-        );
         updateUI(data, true);
+      } else if (data.title) {
+        updateUI(data, false);
       } else {
-        const cached = localStorage.getItem("spotify-last-played");
-        if (cached) {
-          updateUI(JSON.parse(cached), false);
-        } else {
-          setOfflineUI();
-        }
+        setOfflineUI();
       }
     } catch (e) {
       console.error(e);
@@ -201,12 +189,6 @@
   document.addEventListener("astro:page-load", () => {
     // Only run if the component is actually on the current page
     if (document.getElementById("spotify-album-art")) {
-      // Hydrate instantly from cache to prevent UI flash
-      const cached = localStorage.getItem("spotify-last-played");
-      if (cached) {
-        updateUI(JSON.parse(cached), false);
-      }
-
       // Fetch live data
       fetchNowPlaying();
 
