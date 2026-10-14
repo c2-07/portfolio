@@ -1209,13 +1209,15 @@
 
   function drawZzz(ctx: CanvasRenderingContext2D, time: number) {
     const t = time * 0.00065; // Much slower, gentle, peaceful sleeping pace
+    const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+    const zRgb = isDark ? "148, 163, 184" : "71, 85, 105";
 
     // Z 1 (small, floating up gently near beak)
     const p1 = (t * 14) % 28;
     const z1y = -36 - p1;
     const z1x = 10 + Math.sin(t * 2.0) * 4;
     const alpha1 = Math.max(0, 0.8 * (1 - p1 / 28));
-    ctx.fillStyle = `rgba(148, 163, 184, ${alpha1})`;
+    ctx.fillStyle = `rgba(${zRgb}, ${alpha1})`;
     ctx.font = "bold 9px monospace";
     ctx.fillText("z", z1x, z1y);
 
@@ -1224,7 +1226,7 @@
     const z2y = -38 - p2;
     const z2x = 15 + Math.sin((t + 0.38) * 2.0) * 5;
     const alpha2 = Math.max(0, 0.8 * (1 - p2 / 28));
-    ctx.fillStyle = `rgba(148, 163, 184, ${alpha2})`;
+    ctx.fillStyle = `rgba(${zRgb}, ${alpha2})`;
     ctx.font = "bold 11px monospace";
     ctx.fillText("z", z2x, z2y);
 
@@ -1233,7 +1235,7 @@
     const z3y = -40 - p3;
     const z3x = 20 + Math.sin((t + 0.74) * 2.0) * 6;
     const alpha3 = Math.max(0, 0.8 * (1 - p3 / 28));
-    ctx.fillStyle = `rgba(148, 163, 184, ${alpha3})`;
+    ctx.fillStyle = `rgba(${zRgb}, ${alpha3})`;
     ctx.font = "bold 13px monospace";
     ctx.fillText("Z", z3x, z3y);
   }
@@ -1291,12 +1293,16 @@
     const totalHeight = lines.length * lineHeight;
     const startY = Math.max(isSmall ? 16 : 22, y - (totalHeight - lineHeight) * 0.5);
 
-    // Tasteful, non-distracting soft pearl/slate silver text with subtle dark definition
+    const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+
+    // Dynamic contrast based on light/dark theme:
+    // - Dark theme: soft pearl slate silver text (#e2e8f0) with subtle dark outline
+    // - Light theme: deep black (#09090b) with soft white halo outline for crisp readability
     ctx.lineJoin = "round";
     ctx.miterLimit = 2;
-    ctx.lineWidth = 2.0;
-    ctx.strokeStyle = "rgba(15, 23, 42, 0.82)";
-    ctx.fillStyle = "#e2e8f0";
+    ctx.lineWidth = isDark ? 2.0 : 2.8;
+    ctx.strokeStyle = isDark ? "rgba(15, 23, 42, 0.85)" : "rgba(255, 255, 255, 0.95)";
+    ctx.fillStyle = isDark ? "#e2e8f0" : "#09090b";
 
     for (let i = 0; i < lines.length; i++) {
       const lineY = startY + i * lineHeight;
