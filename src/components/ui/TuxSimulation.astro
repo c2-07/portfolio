@@ -18,9 +18,9 @@
   id="tux-fish-toggle-btn"
   type="button"
   aria-label="Feed Tux a fish"
-  title="Feed Tux a fish (click or drag onto page)"
-  class="fixed top-3 right-[108px] sm:top-3.5 sm:right-6 md:top-4 md:right-8 z-[70] flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-sky-500/30 bg-surface/80 hover:bg-surface text-sky-400 hover:text-sky-300 backdrop-blur-md shadow-md shadow-sky-950/20 hover:shadow-sky-500/25 hover:border-sky-400 hover:scale-110 active:scale-95 transition-all duration-300 cursor-grab active:cursor-grabbing group focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 opacity-0 pointer-events-none scale-75 -translate-y-2 select-none"
-  aria-hidden="true"
+  title="Feed Tux a fish (tap or drag onto page)"
+  class="fixed top-2.5 right-[98px] sm:top-3.5 sm:right-6 md:top-4 md:right-8 z-[70] flex items-center justify-center w-10 h-10 rounded-full border border-sky-500/30 bg-surface/85 hover:bg-surface text-sky-400 hover:text-sky-300 backdrop-blur-md shadow-md shadow-sky-950/20 hover:shadow-sky-500/25 hover:border-sky-400 hover:scale-110 active:scale-95 transition-all duration-300 cursor-grab active:cursor-grabbing group focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 touch-none select-none before:absolute before:-inset-2 before:content-['']"
+  aria-hidden="false"
 >
   <span
     id="tux-fish-toggle-indicator"
@@ -74,7 +74,7 @@
 <!-- Transparent full-screen canvas layer for Tux and swimming fish simulation -->
 <canvas
   id="tux-world-canvas"
-  class="fixed inset-0 w-screen h-screen pointer-events-none z-[60] block"
+  class="fixed inset-0 w-screen h-screen pointer-events-none z-[60] block touch-none"
 ></canvas>
 
 <script>
@@ -169,6 +169,7 @@
   let boundPointerDown: ((e: PointerEvent) => void) | null = null;
   let boundPointerMove: ((e: PointerEvent) => void) | null = null;
   let boundPointerUp: ((e: PointerEvent) => void) | null = null;
+  let boundPointerCancel: ((e: PointerEvent) => void) | null = null;
   let boundResize: (() => void) | null = null;
 
   // Hydrodynamic water wake ripples emitted from flippers slicing water
@@ -262,6 +263,10 @@
       window.removeEventListener("pointerup", boundPointerUp, { capture: true });
       boundPointerUp = null;
     }
+    if (boundPointerCancel) {
+      window.removeEventListener("pointercancel", boundPointerCancel);
+      boundPointerCancel = null;
+    }
     if (boundResize) {
       window.removeEventListener("resize", boundResize);
       boundResize = null;
@@ -314,14 +319,26 @@
       // --- Blue Fish Toggle Button in Top Right ---
       // --- Blue Fish Dispenser Button in Top Right ---
       const fishBtn = document.getElementById("tux-fish-toggle-btn") as HTMLButtonElement | null;
+      const fishIndicator = document.getElementById("tux-fish-toggle-indicator");
 
-      function startHoldingFish(mx: number, my: number) {
+      let activePointerId: number | null = null;
+      let isDragFromButton = false;
+
+      function startHoldingFish(mx: number, my: number, pointerId?: number, fromButton = false) {
         isHoldingFish = true;
+        isDragFromButton = fromButton;
         grabStartTime = performance.now();
         grabStartX = mx;
         grabStartY = my;
         dragDistance = 0;
         mousePos = { x: mx, y: my };
+
+        if (pointerId !== undefined && fishBtn) {
+          try {
+            fishBtn.setPointerCapture(pointerId);
+            activePointerId = pointerId;
+          } catch (_) {}
+        }
 
         // Despawn any existing dropped fish so user is moving/holding one single fish
         if (wasmInstance && typeof wasmInstance.despawn_fish === "function") {
@@ -339,6 +356,15 @@
 
       function releaseFish(drop: boolean, mx?: number, my?: number) {
         isHoldingFish = false;
+        isDragFromButton = false;
+
+        if (activePointerId !== null && fishBtn) {
+          try {
+            fishBtn.releasePointerCapture(activePointerId);
+          } catch (_) {}
+          activePointerId = null;
+        }
+
         worldCanvas.style.pointerEvents = "none";
         worldCanvas.style.cursor = "default";
         document.body.style.cursor = "default";
@@ -348,6 +374,10 @@
         }
 
         if (drop && mx !== undefined && my !== undefined && wasmInstance) {
+          // If Tux is sleeping, wake Tux up immediately!
+          if (wasmInstance.get_state() === 5) {
+            wasmInstance.click_tux();
+          }
           wasmInstance.drop_fish(mx, my);
         }
       }
@@ -356,12 +386,10 @@
         fishBtn.addEventListener("keydown", (e: KeyboardEvent) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            if (!isHoldingFish) {
-              const rect = fishBtn.getBoundingClientRect();
-              startHoldingFish(rect.left + rect.width / 2, rect.bottom + 30);
-            } else {
-              releaseFish(false);
-            }
+            // Drop fish right in the visible webpage area
+            const dropX = Math.round(window.innerWidth * 0.5);
+            const dropY = Math.round(Math.max(130, Math.min(window.innerHeight * 0.42, 340)));
+            releaseFish(true, dropX, dropY);
           }
         });
       }
@@ -389,7 +417,7 @@
           }
 
           // Start dragging or holding fish from button
-          startHoldingFish(mx, my);
+          startHoldingFish(mx, my, e.pointerId, true);
           return;
         }
 
@@ -402,8 +430,8 @@
             // Dropped on website outside header: Tux hunts!
             releaseFish(true, mx, my);
           } else {
-            // Clicked inside header area: puts away fish
-            releaseFish(false);
+            // Clicked inside header area: drop comfortably below header
+            releaseFish(true, mx, 120);
           }
           return;
         }
@@ -421,7 +449,7 @@
           if (droppedDist <= FISH_HIT_RADIUS) {
             e.preventDefault();
             e.stopPropagation();
-            startHoldingFish(mx, my);
+            startHoldingFish(mx, my, e.pointerId, false);
             return;
           }
 
@@ -431,13 +459,14 @@
             const ty = wasm.get_y();
             const tuxDist = Math.hypot(mx - tx, my - (ty - 26));
             if (tuxDist > TUX_HIT_RADIUS) {
+              if (state === 5) wasm.click_tux();
               wasm.drop_fish(mx, my);
               return;
             }
           }
         }
 
-        // Case 3: Clicking on Tux
+        // Case 3: Clicking on Tux (wakes up or interacts)
         const tx = wasm.get_x();
         const ty = wasm.get_y();
         const tuxDist = Math.hypot(mx - tx, my - (ty - 26));
@@ -485,26 +514,53 @@
         const my = e.clientY;
         const holdDuration = performance.now() - grabStartTime;
 
-        // If user dragged the fish (moved mouse significantly or held for > 200ms), drop on release!
-        if (dragDistance > 10 || holdDuration > 200) {
+        // Did the user tap without dragging? (e.g. quick tap on mobile or stationary click on button)
+        if (isDragFromButton && dragDistance < 15) {
+          // Tap on button: drop fish directly in the comfortable active webpage area!
+          const dropX = Math.round(window.innerWidth * 0.5);
+          const dropY = Math.round(Math.max(130, Math.min(window.innerHeight * 0.42, 340)));
+          releaseFish(true, dropX, dropY);
+          return;
+        }
+
+        // If user dragged the fish:
+        if (dragDistance >= 15 || holdDuration > 200) {
           if (my > 55) {
             // Dropped outside header onto the website: Tux hunts it!
             releaseFish(true, mx, my);
           } else {
-            // Released inside header / on button: put fish away safely
-            releaseFish(false);
+            // Released inside header area: drop comfortably below header so it is never lost!
+            releaseFish(true, mx, 120);
           }
+          return;
         }
-        // If not dragged (quick stationary click on button), keep holding in pick mode until next click!
+
+        // On desktop mouse: stationary click away from button keeps holding in pick mode
+        if (e.pointerType === "mouse") {
+          return;
+        }
+
+        // On touch device: if somehow released without dropping, drop in visible center
+        const dropX = Math.round(window.innerWidth * 0.5);
+        const dropY = Math.round(Math.max(130, Math.min(window.innerHeight * 0.42, 340)));
+        releaseFish(true, dropX, dropY);
+      }
+
+      function onPointerCancel() {
+        if (isHoldingFish) {
+          releaseFish(false);
+        }
       }
 
       boundPointerDown = onPointerDown;
       boundPointerMove = onPointerMove;
       boundPointerUp = onPointerUp;
+      boundPointerCancel = onPointerCancel;
 
       window.addEventListener("pointerdown", onPointerDown, { capture: true });
       window.addEventListener("pointermove", onPointerMove);
       window.addEventListener("pointerup", onPointerUp, { capture: true });
+      window.addEventListener("pointercancel", onPointerCancel);
 
       let lastTime = performance.now();
 
@@ -538,20 +594,29 @@
         const isTuxSleeping = state === 5;
         const isTuxBusyEating = state === 3 || state === 7;
 
-        // Top-right blue fish button visibility:
-        // Shown when Tux is awake, hidden when Tux is sleeping
+        // Top-right blue fish button state & visibility:
         if (fishBtn) {
           if (isTuxSleeping) {
-            fishBtn.classList.remove("opacity-100", "pointer-events-auto", "scale-100", "translate-y-0");
-            fishBtn.classList.add("opacity-0", "pointer-events-none", "scale-75", "-translate-y-2");
-            fishBtn.setAttribute("aria-hidden", "true");
-            if (isHoldingFish) {
+            // When Tux is sleeping, show button softly: tap wakes Tux and drops fish
+            fishBtn.classList.remove("opacity-100", "scale-100");
+            fishBtn.classList.add("opacity-80", "scale-90");
+            fishBtn.setAttribute("title", "Tux is sleeping. Tap fish to wake and feed!");
+            if (fishIndicator) {
+              fishIndicator.classList.remove("opacity-100", "scale-100");
+              fishIndicator.classList.add("opacity-0", "scale-50");
+            }
+            if (isHoldingFish && !isDragFromButton) {
               releaseFish(false);
             }
           } else {
-            fishBtn.classList.remove("opacity-0", "pointer-events-none", "scale-75", "-translate-y-2");
-            fishBtn.classList.add("opacity-100", "pointer-events-auto", "scale-100", "translate-y-0");
-            fishBtn.setAttribute("aria-hidden", "false");
+            // When Tux is awake, full brightness with glowing active indicator
+            fishBtn.classList.remove("opacity-80", "scale-90");
+            fishBtn.classList.add("opacity-100", "scale-100");
+            fishBtn.setAttribute("title", "Tap or drag fish onto page to feed Tux");
+            if (fishIndicator) {
+              fishIndicator.classList.remove("opacity-0", "scale-50");
+              fishIndicator.classList.add("opacity-100", "scale-100");
+            }
           }
         }
 
