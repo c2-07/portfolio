@@ -1,0 +1,1260 @@
+---
+// Free-swimming Linux Tux and Blue Fish powered by WebAssembly (WASM)
+// - Tux starts sleeping beside the website logo; wakes on click
+// - When awake, a blue fish button appears in the top-right corner
+// - Clicking or dragging the top-right button dispenses a draggable blue fish attached to cursor
+// - Drop the fish anywhere on the website for Tux to hunt, eat, celebrate, and nap!
+// - Zero header fish clutter: header stays completely clean
+// - Roaming: Tux covers the whole screen from start to end at once:
+//     1. Walks a bit (waddling penguin steps on foot)
+//     2. Swims a bit (streamlined horizontal glide with bubble trail)
+//     3. Takes a rest (stands, blinks, catches breath)
+// - When fish is dropped on website: Tux hunts it in non-linear path, eats it, celebrates, returns home, and sleeps
+// - Responsive scaling across mobile, tablet, laptop, and desktop
+---
+
+<!-- Blue fish dispenser button in top right: reveals when Tux wakes up, click/drag to feed Tux a fish -->
+<button
+  id="tux-fish-toggle-btn"
+  type="button"
+  aria-label="Feed Tux a fish"
+  title="Feed Tux a fish (click or drag onto page)"
+  class="fixed top-3 right-[108px] sm:top-3.5 sm:right-6 md:top-4 md:right-8 z-[70] flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-sky-500/30 bg-surface/80 hover:bg-surface text-sky-400 hover:text-sky-300 backdrop-blur-md shadow-md shadow-sky-950/20 hover:shadow-sky-500/25 hover:border-sky-400 hover:scale-110 active:scale-95 transition-all duration-300 cursor-grab active:cursor-grabbing group focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 opacity-0 pointer-events-none scale-75 -translate-y-2 select-none"
+  aria-hidden="true"
+>
+  <span
+    id="tux-fish-toggle-indicator"
+    class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-sky-400 ring-2 ring-background transition-all duration-300 opacity-100 scale-100 shadow-[0_0_8px_#38bdf8] animate-pulse"
+  ></span>
+  <svg
+    class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 pointer-events-none"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <!-- Tail Fin -->
+    <path
+      d="M4 7.5C5.5 9.5 5.5 14.5 4 16.5L7.5 13C8 12.5 8 11.5 7.5 11L4 7.5Z"
+      fill="currentColor"
+      opacity="0.9"
+    />
+    <!-- Fish Body -->
+    <path
+      d="M6 12C9 7.5 16 7.5 20.5 12C16 16.5 9 16.5 6 12Z"
+      fill="url(#tuxFishGradient)"
+    />
+    <!-- Dorsal Fin -->
+    <path
+      d="M12 7.8C13.5 5.8 16 6.3 16.8 7.8"
+      stroke="currentColor"
+      stroke-width="1.4"
+      stroke-linecap="round"
+    />
+    <!-- Fish Eye -->
+    <circle cx="17.2" cy="11.4" r="1.3" fill="#ffffff" />
+    <circle cx="17.6" cy="11.2" r="0.65" fill="#0f172a" />
+    <!-- Cute Gill Arc -->
+    <path
+      d="M14.5 10C15 11 15 13 14.5 14"
+      stroke="currentColor"
+      stroke-width="1"
+      stroke-linecap="round"
+      opacity="0.6"
+    />
+    <defs>
+      <linearGradient id="tuxFishGradient" x1="6" y1="12" x2="20.5" y2="12" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#2563eb" />
+        <stop offset="0.55" stop-color="#38bdf8" />
+        <stop offset="1" stop-color="#67e8f9" />
+      </linearGradient>
+    </defs>
+  </svg>
+</button>
+
+<!-- Transparent full-screen canvas layer for Tux and swimming fish simulation -->
+<canvas
+  id="tux-world-canvas"
+  class="fixed inset-0 w-screen h-screen pointer-events-none z-[60] block"
+></canvas>
+
+<script>
+  import { TUX_WASM_BASE64 } from "../../wasm/tux/wasm_base64.js";
+
+  const SPEECHES = [
+    // 0..9: Click while awake / playful barrel roll / poked
+    "sudo touch tux: granted 😉",
+    "hey! not a touchscreen!",
+    "where's your PR for that click?",
+    "kernel panic: poked!",
+    "btw I use Arch Linux :)",
+    "vim > emacs (fight me)",
+    "rm -rf / (just kidding)",
+    "it works on my machine ¯\\_(ツ)_/¯",
+    "git commit -m 'oops'",
+    "do a barrel roll!",
+
+    // 10..19: Wake up dialogues
+    "who dares wake root?!",
+    "systemctl start tux --force",
+    "sudo wake-up --caffeine",
+    "uptime: 420 days ruined!",
+    "5 more mins, compiling...",
+    "loading drivers... OK!",
+    "ping tux: 100% sleepy",
+    "who touched my config?!",
+    "coffee first, then code ☕",
+    "my eyes! light mode?!",
+
+    // 20..29: Chasing / fish moved / relocated
+    "FISH DETECTED! Zooming!",
+    "hey! stop moving my dinner!",
+    "sudo pacman -S fish-dinner",
+    "why are you running?!",
+    "404: fish relocated!",
+    "can't hide from root!",
+    "curl -X GET /fresh-fish",
+    "fish moved?! On my way!",
+    "chasing snack on localhost!",
+    "target locked: yummy fish!",
+
+    // 30..39: Eating fish celebration
+    "OM NOM NOM! Delicious!",
+    "malloc(fish) -> 200 OK!",
+    "sync; echo 3 > drop_caches",
+    "fish successfully digested!",
+    "pure open-source omega-3!",
+    "docker run -d --name belly fish",
+    "git push origin tummy --force",
+    "energy: 100%. happy tux!",
+    "tastes like zero borrow errors!",
+    "tummy level: OVER 9000!",
+
+    // 40..49: Resting
+    "htop: tux CPU 100% (cooling)",
+    "espresso break ☕",
+    "neofetch: looking handsome",
+    "running garbage collector...",
+    "paging inactive tasks to swap...",
+    "contemplating life & bash",
+    "battery 99%, vibe 100%",
+    "ping localhost: tux is chill",
+    "man tux: section 4 (belly rubs)",
+    "sleeping threads: max chill",
+
+    // 50..59: Roaming / traversing screen
+    "waddling across your DOM...",
+    "inspecting for loose snacks...",
+    "patrolling frontend, carry on!",
+    "swimming through fiber optics 🌊",
+    "any pizza in /var/tmp?",
+    "nice site! did you write tests?",
+    "taking my daily 10k waddles",
+    "CSS looks centered. good job.",
+    "exploring new coordinates...",
+    "penguins know how to slide!",
+
+    // 60..64: Returning home
+    "heading back to base for a nap...",
+    "belly full, shutting down...",
+    "gliding back to cozy corner 🛏️",
+    "goodnight localhost!",
+    "entering power save mode... zzz",
+  ];
+
+  let wasmInstance: any = null;
+  let animReqId: number | null = null;
+  let isSimulationActive = false;
+
+  // Active listener references to prevent duplicate event registration
+  let boundPointerDown: ((e: PointerEvent) => void) | null = null;
+  let boundPointerMove: ((e: PointerEvent) => void) | null = null;
+  let boundPointerUp: ((e: PointerEvent) => void) | null = null;
+  let boundResize: (() => void) | null = null;
+
+  // Hydrodynamic water wake ripples emitted from flippers slicing water
+  interface WaterWake {
+    x: number;
+    y: number;
+    radius: number;
+    maxRadius: number;
+    angle: number;
+    alpha: number;
+    width: number;
+  }
+  const waterWakes: WaterWake[] = [];
+
+  // Grabbing & Dragging state for fish
+  let isHoldingFish = false;
+  let grabStartTime = 0;
+  let grabStartX = 0;
+  let grabStartY = 0;
+  let dragDistance = 0;
+  let mousePos = { x: 0, y: 0 };
+
+  // Dynamic scale for Tux according to screen width:
+  // - Mobile (< 480px): ~0.82x (cute, compact, won't overwhelm screen)
+  // - Tablets (480px - 768px): 0.82x - 1.05x
+  // - Small Laptops (768px - 1100px): 1.05x - 1.25x
+  // - Desktop / Large Screens (>= 1100px): 1.25x (full size)
+  function getTuxScale(): number {
+    const w = typeof window !== "undefined" ? window.innerWidth : 1200;
+    if (w < 480) {
+      return 0.82;
+    } else if (w < 768) {
+      return 0.82 + ((w - 480) / (768 - 480)) * 0.23;
+    } else if (w < 1100) {
+      return 1.05 + ((w - 768) / (1100 - 768)) * 0.20;
+    }
+    return 1.25;
+  }
+
+  function getFishScaleMultiplier(): number {
+    const w = typeof window !== "undefined" ? window.innerWidth : 1200;
+    if (w < 480) {
+      return 0.80;
+    } else if (w < 768) {
+      return 0.80 + ((w - 480) / (768 - 480)) * 0.20;
+    }
+    return 1.0;
+  }
+
+  async function loadWasm() {
+    try {
+      const response = await fetch("/wasm/tux_sim.wasm");
+      if (response.ok) {
+        const bytes = await response.arrayBuffer();
+        const module = await WebAssembly.instantiate(bytes, {});
+        return module.instance.exports;
+      }
+    } catch (e) {
+      console.warn("WASM fetch failed, using embedded base64 fallback:", e);
+    }
+
+    try {
+      const binaryString = atob(TUX_WASM_BASE64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const module = await WebAssembly.instantiate(bytes.buffer, {});
+      return module.instance.exports;
+    } catch (err) {
+      console.error("Failed to load Tux WASM module:", err);
+      return null;
+    }
+  }
+
+  function cleanupSimulation() {
+    if (animReqId !== null) {
+      cancelAnimationFrame(animReqId);
+      animReqId = null;
+    }
+    if (boundPointerDown) {
+      window.removeEventListener("pointerdown", boundPointerDown, { capture: true });
+      boundPointerDown = null;
+    }
+    if (boundPointerMove) {
+      window.removeEventListener("pointermove", boundPointerMove);
+      boundPointerMove = null;
+    }
+    if (boundPointerUp) {
+      window.removeEventListener("pointerup", boundPointerUp, { capture: true });
+      boundPointerUp = null;
+    }
+    if (boundResize) {
+      window.removeEventListener("resize", boundResize);
+      boundResize = null;
+    }
+    isSimulationActive = false;
+  }
+
+  function initTuxWorld() {
+    cleanupSimulation();
+
+    const worldCanvas = document.getElementById("tux-world-canvas") as HTMLCanvasElement;
+    if (!worldCanvas) return;
+
+    const wCtx = worldCanvas.getContext("2d");
+    if (!wCtx) return;
+
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    function resizeWorld() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      worldCanvas.width = window.innerWidth * dpr;
+      worldCanvas.height = window.innerHeight * dpr;
+      if (wasmInstance) {
+        wasmInstance.set_screen_size(window.innerWidth, window.innerHeight);
+      }
+    }
+    resizeWorld();
+    boundResize = resizeWorld;
+    window.addEventListener("resize", resizeWorld);
+
+    // Tux home position: comfortable corner perch adapting to screen size
+    function getTuxHomePos() {
+      const isSmall = window.innerWidth < 640;
+      const rightOffset = isSmall ? 48 : 65;
+      const bottomOffset = isSmall ? 48 : 36;
+      const x = Math.max(50, window.innerWidth - rightOffset);
+      const y = Math.max(60, window.innerHeight - bottomOffset);
+      return { x, y };
+    }
+
+    // Load and initialize WASM simulation
+    loadWasm().then((wasm) => {
+      if (!wasm) return;
+      wasmInstance = wasm;
+
+      const home = getTuxHomePos();
+      wasm.sim_init(window.innerWidth, window.innerHeight, home.x, home.y);
+      isSimulationActive = true;
+
+      // --- Blue Fish Toggle Button in Top Right ---
+      // --- Blue Fish Dispenser Button in Top Right ---
+      const fishBtn = document.getElementById("tux-fish-toggle-btn") as HTMLButtonElement | null;
+
+      function startHoldingFish(mx: number, my: number) {
+        isHoldingFish = true;
+        grabStartTime = performance.now();
+        grabStartX = mx;
+        grabStartY = my;
+        dragDistance = 0;
+        mousePos = { x: mx, y: my };
+
+        // Despawn any existing dropped fish so user is moving/holding one single fish
+        if (wasmInstance && typeof wasmInstance.despawn_fish === "function") {
+          wasmInstance.despawn_fish();
+        }
+
+        worldCanvas.style.pointerEvents = "auto";
+        worldCanvas.style.cursor = "grabbing";
+        document.body.style.cursor = "grabbing";
+
+        if (fishBtn) {
+          fishBtn.classList.add("ring-2", "ring-sky-400", "border-sky-400", "scale-105");
+        }
+      }
+
+      function releaseFish(drop: boolean, mx?: number, my?: number) {
+        isHoldingFish = false;
+        worldCanvas.style.pointerEvents = "none";
+        worldCanvas.style.cursor = "default";
+        document.body.style.cursor = "default";
+
+        if (fishBtn) {
+          fishBtn.classList.remove("ring-2", "ring-sky-400", "border-sky-400", "scale-105");
+        }
+
+        if (drop && mx !== undefined && my !== undefined && wasmInstance) {
+          wasmInstance.drop_fish(mx, my);
+        }
+      }
+
+      if (fishBtn) {
+        fishBtn.addEventListener("keydown", (e: KeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            if (!isHoldingFish) {
+              const rect = fishBtn.getBoundingClientRect();
+              startHoldingFish(rect.left + rect.width / 2, rect.bottom + 30);
+            } else {
+              releaseFish(false);
+            }
+          }
+        });
+      }
+
+      // --- Pointer Interactions (Dispenser Button, Relocating Dropped Fish & Clicking Tux) ---
+      const FISH_HIT_RADIUS = 50;
+      const TUX_HIT_RADIUS = 50;
+
+      function onPointerDown(e: PointerEvent) {
+        const mx = e.clientX;
+        const my = e.clientY;
+        mousePos = { x: mx, y: my };
+
+        const isClickOnFishBtn = fishBtn && (e.target === fishBtn || fishBtn.contains(e.target as Node));
+
+        // Case 0: Interacting with the Top-Right Fish Dispenser Button
+        if (isClickOnFishBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (isHoldingFish) {
+            // Already holding: clicking button again cancels/puts away fish
+            releaseFish(false);
+            return;
+          }
+
+          // Start dragging or holding fish from button
+          startHoldingFish(mx, my);
+          return;
+        }
+
+        // Case 1: Already holding fish in "click-to-pick" mode and clicked anywhere on screen
+        if (isHoldingFish) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (my > 55) {
+            // Dropped on website outside header: Tux hunts!
+            releaseFish(true, mx, my);
+          } else {
+            // Clicked inside header area: puts away fish
+            releaseFish(false);
+          }
+          return;
+        }
+
+        const state = wasm.get_state();
+        const isDropped = wasm.get_fish_dropped() === 1;
+
+        // Case 2: Re-grabbing or relocating the already DROPPED fish on the website
+        if (isDropped) {
+          const droppedFishX = wasm.get_fish_x();
+          const droppedFishY = wasm.get_fish_y();
+          const droppedDist = Math.hypot(mx - droppedFishX, my - droppedFishY);
+
+          // If clicked directly on the dropped fish, re-grab it to drag/relocate
+          if (droppedDist <= FISH_HIT_RADIUS) {
+            e.preventDefault();
+            e.stopPropagation();
+            startHoldingFish(mx, my);
+            return;
+          }
+
+          // Or if clicked anywhere on the webpage outside the header, relocate fish there immediately for Tux to chase!
+          if (my > 55) {
+            const tx = wasm.get_x();
+            const ty = wasm.get_y();
+            const tuxDist = Math.hypot(mx - tx, my - (ty - 26));
+            if (tuxDist > TUX_HIT_RADIUS) {
+              wasm.drop_fish(mx, my);
+              return;
+            }
+          }
+        }
+
+        // Case 3: Clicking on Tux
+        const tx = wasm.get_x();
+        const ty = wasm.get_y();
+        const tuxDist = Math.hypot(mx - tx, my - (ty - 26));
+        if (tuxDist <= TUX_HIT_RADIUS) {
+          wasm.click_tux();
+        }
+      }
+
+      function onPointerMove(e: PointerEvent) {
+        mousePos = { x: e.clientX, y: e.clientY };
+
+        if (isHoldingFish) {
+          dragDistance += Math.hypot(e.movementX || 0, e.movementY || 0);
+          worldCanvas.style.cursor = "grabbing";
+          document.body.style.cursor = "grabbing";
+          return;
+        }
+
+        // Hover cursor feedback over dropped fish and Tux
+        const isDropped = wasm.get_fish_dropped() === 1;
+        const droppedFishX = wasm.get_fish_x();
+        const droppedFishY = wasm.get_fish_y();
+        const droppedDist = Math.hypot(e.clientX - droppedFishX, e.clientY - droppedFishY);
+        const tx = wasm.get_x();
+        const ty = wasm.get_y();
+        const tuxDist = Math.hypot(e.clientX - tx, e.clientY - (ty - 26));
+
+        if (isDropped && droppedDist <= FISH_HIT_RADIUS) {
+          document.body.style.cursor = "grab";
+        } else if (tuxDist <= TUX_HIT_RADIUS) {
+          document.body.style.cursor = "pointer";
+        } else if (
+          document.body.style.cursor === "grab" ||
+          document.body.style.cursor === "pointer" ||
+          document.body.style.cursor === "grabbing"
+        ) {
+          document.body.style.cursor = "default";
+        }
+      }
+
+      function onPointerUp(e: PointerEvent) {
+        if (!isHoldingFish) return;
+
+        const mx = e.clientX;
+        const my = e.clientY;
+        const holdDuration = performance.now() - grabStartTime;
+
+        // If user dragged the fish (moved mouse significantly or held for > 200ms), drop on release!
+        if (dragDistance > 10 || holdDuration > 200) {
+          if (my > 55) {
+            // Dropped outside header onto the website: Tux hunts it!
+            releaseFish(true, mx, my);
+          } else {
+            // Released inside header / on button: put fish away safely
+            releaseFish(false);
+          }
+        }
+        // If not dragged (quick stationary click on button), keep holding in pick mode until next click!
+      }
+
+      boundPointerDown = onPointerDown;
+      boundPointerMove = onPointerMove;
+      boundPointerUp = onPointerUp;
+
+      window.addEventListener("pointerdown", onPointerDown, { capture: true });
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp, { capture: true });
+
+      let lastTime = performance.now();
+
+      function worldLoop(now: number) {
+        if (!isSimulationActive) return;
+
+        const dt = (now - lastTime) / 1000;
+        lastTime = now;
+
+        const isDropped = wasm.get_fish_dropped() === 1;
+        const droppedFishX = wasm.get_fish_x();
+        const droppedFishY = wasm.get_fish_y();
+
+        // Keep home pos synchronized with layout on resize/scroll
+        const currentHome = getTuxHomePos();
+        wasm.set_home_pos(currentHome.x, currentHome.y);
+
+        // Step WASM simulation
+        wasm.sim_tick(dt);
+
+        const tuxX = wasm.get_x();
+        const tuxY = wasm.get_y();
+        const facing = wasm.get_facing();
+        const state = wasm.get_state();
+        const animFrame = wasm.get_anim_frame();
+        const swimAngle = wasm.get_swim_angle();
+        const spinAngle = wasm.get_spin_angle();
+        const speechTimer = wasm.get_speech_timer();
+        const speechId = wasm.get_speech_id();
+
+        const isTuxSleeping = state === 5;
+        const isTuxBusyEating = state === 3 || state === 7;
+
+        // Top-right blue fish button visibility:
+        // Shown when Tux is awake, hidden when Tux is sleeping
+        if (fishBtn) {
+          if (isTuxSleeping) {
+            fishBtn.classList.remove("opacity-100", "pointer-events-auto", "scale-100", "translate-y-0");
+            fishBtn.classList.add("opacity-0", "pointer-events-none", "scale-75", "-translate-y-2");
+            fishBtn.setAttribute("aria-hidden", "true");
+            if (isHoldingFish) {
+              releaseFish(false);
+            }
+          } else {
+            fishBtn.classList.remove("opacity-0", "pointer-events-none", "scale-75", "-translate-y-2");
+            fishBtn.classList.add("opacity-100", "pointer-events-auto", "scale-100", "translate-y-0");
+            fishBtn.setAttribute("aria-hidden", "false");
+          }
+        }
+
+        // Reset canvas transform to standard device pixel scale and clear
+        wCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        wCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+        // 2. Draw Fish:
+        // A) Being held by cursor (follows cursor)
+        if (isHoldingFish) {
+          const auraR = 24 + Math.sin(now * 0.008) * 4;
+          wCtx.save();
+          wCtx.fillStyle = "rgba(56, 189, 248, 0.25)";
+          wCtx.strokeStyle = "#38bdf8";
+          wCtx.lineWidth = 1.8;
+          wCtx.beginPath();
+          wCtx.arc(mousePos.x, mousePos.y, auraR, 0, Math.PI * 2);
+          wCtx.fill();
+          wCtx.stroke();
+
+          // Drop guidance text
+          if (mousePos.y > 55) {
+            wCtx.font = "bold 11px monospace";
+            wCtx.fillStyle = "#38bdf8";
+            wCtx.textAlign = "center";
+            wCtx.fillText("drop fish here", mousePos.x, mousePos.y + 36);
+          } else {
+            wCtx.font = "10px monospace";
+            wCtx.fillStyle = "#94a3b8";
+            wCtx.textAlign = "center";
+            wCtx.fillText("move below header to drop", mousePos.x, mousePos.y + 36);
+          }
+          wCtx.restore();
+
+          drawBlueFish(wCtx, mousePos.x, mousePos.y, now, 1, 1.25 * getFishScaleMultiplier());
+        }
+        // B) Dropped on website (stays in place for Tux to hunt/chase)
+        else if (isDropped) {
+          const beaconR = (20 + Math.sin(now * 0.006) * 5) * getFishScaleMultiplier();
+          wCtx.save();
+          wCtx.fillStyle = "rgba(56, 189, 248, 0.22)";
+          wCtx.strokeStyle = "rgba(56, 189, 248, 0.8)";
+          wCtx.lineWidth = 1.6;
+          wCtx.beginPath();
+          wCtx.arc(droppedFishX, droppedFishY, beaconR, 0, Math.PI * 2);
+          wCtx.fill();
+          wCtx.stroke();
+
+          // If mouse is near dropped fish, show grab target ring and "MOVE" hint
+          const droppedDist = Math.hypot(mousePos.x - droppedFishX, mousePos.y - droppedFishY);
+          if (droppedDist <= FISH_HIT_RADIUS) {
+            wCtx.strokeStyle = "#38bdf8";
+            wCtx.fillStyle = "rgba(56, 189, 248, 0.18)";
+            wCtx.lineWidth = 2;
+            wCtx.shadowColor = "#38bdf8";
+            wCtx.shadowBlur = 8;
+            wCtx.beginPath();
+            wCtx.arc(droppedFishX, droppedFishY, (22 + Math.sin(now * 0.01) * 3) * getFishScaleMultiplier(), 0, Math.PI * 2);
+            wCtx.fill();
+            wCtx.stroke();
+
+            wCtx.font = "bold 9px monospace";
+            wCtx.fillStyle = "#38bdf8";
+            wCtx.textAlign = "center";
+            wCtx.fillText("MOVE", droppedFishX, droppedFishY - 20);
+          }
+          wCtx.restore();
+
+          drawBlueFish(wCtx, droppedFishX, droppedFishY, now, 1, 1.2 * getFishScaleMultiplier());
+        }
+
+        const tuxVx = wasm.get_vx();
+        const tuxVy = wasm.get_vy();
+        const tuxSpeed = Math.sqrt(tuxVx * tuxVx + tuxVy * tuxVy);
+
+        // 3. Hydrodynamic water wake from flippers carving through water (NOT from rear!)
+        const wakeScale = getTuxScale() / 1.25;
+        if ((state === 2 || state === 4 || state === 7) && tuxSpeed > 35 && Math.random() < 0.6) {
+          const normVx = tuxVx / tuxSpeed;
+          const normVy = tuxVy / tuxSpeed;
+          // Perpendicular normal to velocity (left & right flipper tips)
+          const perpX = -normVy;
+          const perpY = normVx;
+          const side = Math.random() < 0.5 ? 1 : -1;
+          const flipperOffset = side * 13 * wakeScale;
+
+          waterWakes.push({
+            x: tuxX + perpX * flipperOffset,
+            y: tuxY - 10 * wakeScale + perpY * flipperOffset,
+            radius: 3 * wakeScale,
+            maxRadius: (15 + Math.random() * 8) * wakeScale,
+            angle: Math.atan2(normVy, normVx),
+            alpha: 0.5,
+            width: 1.2 * wakeScale,
+          });
+        }
+
+        for (let i = waterWakes.length - 1; i >= 0; i--) {
+          const w = waterWakes[i];
+          w.radius += dt * 28; // smoothly expands outward
+          w.alpha -= dt * 1.1; // fades out gracefully
+          if (w.alpha <= 0 || w.radius >= w.maxRadius) {
+            waterWakes.splice(i, 1);
+            continue;
+          }
+          wCtx.save();
+          wCtx.strokeStyle = `rgba(56, 189, 248, ${w.alpha * 0.75})`;
+          wCtx.lineWidth = w.width;
+          wCtx.beginPath();
+          wCtx.ellipse(w.x, w.y, w.radius * 1.5, w.radius * 0.65, w.angle, 0, Math.PI * 2);
+          wCtx.stroke();
+          wCtx.restore();
+        }
+
+        // 4. Render Tux (responsive scaling: ~0.82x on mobile, 1.25x on desktop)
+        drawTux(wCtx, tuxX, tuxY, facing, state, animFrame, now, swimAngle, spinAngle, tuxVx, tuxVy);
+
+        // 5. Render Speech Bubble if active (responsive offset and font size)
+        if (speechTimer > 0) {
+          const speechYOffset = window.innerWidth < 640 ? -48 : -62;
+          drawSpeechBubble(wCtx, tuxX, tuxY + speechYOffset, SPEECHES[speechId] || "tux: ok");
+        }
+
+        animReqId = requestAnimationFrame(worldLoop);
+      }
+
+      animReqId = requestAnimationFrame(worldLoop);
+    });
+  }
+
+  // --- Draw Glowing Blue Fish (Electric Cyan matching Theme) ---
+  function drawBlueFish(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    time: number,
+    facing: number = 1,
+    scale: number = 1.0
+  ) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(facing * scale, scale);
+
+    const wiggle = Math.sin(time * 0.016) * 4;
+    ctx.rotate((wiggle * Math.PI) / 180);
+
+    // Cyan Neon Glow
+    ctx.shadowColor = "#38bdf8";
+    ctx.shadowBlur = 10;
+
+    // Body gradient
+    const bodyGrad = ctx.createLinearGradient(-10, -5, 10, 5);
+    bodyGrad.addColorStop(0, "#2563eb");
+    bodyGrad.addColorStop(0.5, "#38bdf8");
+    bodyGrad.addColorStop(1, "#67e8f9");
+    ctx.fillStyle = bodyGrad;
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 9, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tail fin
+    ctx.beginPath();
+    ctx.moveTo(-8, 0);
+    ctx.lineTo(-14, -5);
+    ctx.lineTo(-14, 5);
+    ctx.closePath();
+    ctx.fillStyle = "#0284c7";
+    ctx.fill();
+
+    // Dorsal fin
+    ctx.beginPath();
+    ctx.moveTo(-2, -5);
+    ctx.lineTo(2, -8);
+    ctx.lineTo(4, -5);
+    ctx.closePath();
+    ctx.fillStyle = "#38bdf8";
+    ctx.fill();
+
+    // Eye
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(5.5, -1.2, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.arc(6, -1.2, 0.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Persistent horizontal swimming facing & pitch with smooth interpolation
+  let persistentSwimFacing = -1;
+  let smoothedSwimPitch = 0;
+
+  // --- Draw Linux Tux (25% Size Increase + Head Fully Visible) ---
+  function drawTux(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    facing: number,
+    state: number,
+    frame: number,
+    time: number,
+    _swimAngle: number,
+    spinAngle: number,
+    vx: number = 0,
+    vy: number = 0
+  ) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Dynamic scale: ~0.82x on mobile, 1.05x on tablet, 1.25x on desktop/laptop
+    const SCALE = getTuxScale();
+
+    if (state === 1) {
+      // 1. WALKING A BIT ACROSS SCREEN: cute waddling steps on foot
+      smoothedSwimPitch = 0;
+      ctx.scale(facing * SCALE, SCALE);
+      drawTuxWalking(ctx, frame, time);
+    } else if (state === 2 || state === 4 || state === 7) {
+      // 2. SWIMMING (swimming across screen, hunting fish, or returning home)
+      if (facing === 1 || facing === -1) {
+        persistentSwimFacing = facing;
+      }
+
+      // Calculate smooth diving/climbing pitch based on movement velocity
+      const speedHoriz = Math.max(12, Math.abs(vx));
+      // targetPitch: positive when diving down (+vy), negative when climbing up (-vy)
+      const targetPitch = Math.atan2(vy, speedHoriz);
+      // Clamp pitch to max ~65 deg (1.14 rad) so Tux can dive/climb steeply but NEVER upside down!
+      const clampedPitch = Math.max(-1.14, Math.min(1.14, targetPitch));
+
+      // Smooth pitch transitions (exponential smoothing) for fluid, graceful gliding
+      smoothedSwimPitch += (clampedPitch - smoothedSwimPitch) * 0.18;
+
+      if (persistentSwimFacing === -1) {
+        // Swimming Left: flip horizontally with -SCALE, and tilt along diving/climbing path
+        ctx.scale(-SCALE, SCALE);
+        ctx.rotate(smoothedSwimPitch);
+      } else {
+        // Swimming Right: normal SCALE, and tilt along diving/climbing path
+        ctx.scale(SCALE, SCALE);
+        ctx.rotate(smoothedSwimPitch);
+      }
+
+      ctx.translate(0, -10);
+      drawTuxSwimming(ctx, frame, time);
+    } else if (state === 3) {
+      // VICTORY CELEBRATION LOOP (360 spin)
+      ctx.scale(facing * SCALE, SCALE);
+      ctx.rotate(spinAngle);
+      ctx.translate(0, -10);
+      drawTuxSwimming(ctx, frame, time);
+    } else if (state === 0) {
+      // 3. TAKE REST: standing/looking around at destination end of screen
+      smoothedSwimPitch = 0;
+      ctx.scale(facing * SCALE, SCALE);
+      drawTuxStanding(ctx, frame, false, time);
+    } else {
+      // SLEEPING AT HOME (state === 5)
+      smoothedSwimPitch = 0;
+      ctx.scale(facing * SCALE, SCALE);
+      drawTuxStanding(ctx, 4, true, time);
+      drawZzz(ctx, time);
+    }
+
+    ctx.restore();
+  }
+
+  // Cute waddling walk pose with alternating steps, swinging flippers, and body tilt
+  function drawTuxWalking(
+    ctx: CanvasRenderingContext2D,
+    _frame: number,
+    time: number
+  ) {
+    const stepCycle = time * 0.012;
+    const waddle = Math.sin(stepCycle) * 0.12; // ~7 degree waddle tilt
+    ctx.rotate(waddle);
+
+    // Alternating penguin steps
+    const leftFootLift = Math.max(0, Math.sin(stepCycle) * 4);
+    const rightFootLift = Math.max(0, -Math.sin(stepCycle) * 4);
+
+    // Walking shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.beginPath();
+    ctx.ellipse(0, -2, 16 + Math.abs(Math.sin(stepCycle)) * 2, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Yellow feet stepping
+    ctx.fillStyle = "#f59e0b";
+    ctx.beginPath();
+    ctx.ellipse(-8, -1 - leftFootLift, 7.5, 3.5, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(8, -1 - rightFootLift, 7.5, 3.5, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Charcoal Black Body Torso
+    ctx.fillStyle = "#18181b";
+    ctx.beginPath();
+    ctx.ellipse(0, -18, 16, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Charcoal Black Head (center at -31, top at -42)
+    ctx.beginPath();
+    ctx.ellipse(0, -31, 12.5, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // White Belly
+    ctx.fillStyle = "#f4f4f5";
+    ctx.beginPath();
+    ctx.ellipse(2.5, -16, 10.5, 13.5, 0.05, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flippers swinging with waddle
+    const flipperSwing = Math.cos(stepCycle) * 0.25;
+    ctx.fillStyle = "#18181b";
+    ctx.beginPath();
+    ctx.ellipse(-14, -18, 4.5, 11, 0.4 + flipperSwing, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(13, -18, 4.5, 11, -0.4 + flipperSwing, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Alert open eyes while walking
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.ellipse(2, -32, 3.8, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(8, -32, 3.8, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pupils looking ahead
+    ctx.fillStyle = "#09090b";
+    ctx.beginPath();
+    ctx.arc(3.5, -32, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(9.5, -32, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye glints
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(2.8, -34, 1.2, 1.2);
+    ctx.fillRect(8.8, -34, 1.2, 1.2);
+
+    // Beak
+    ctx.fillStyle = "#f59e0b";
+    ctx.beginPath();
+    ctx.ellipse(5, -26, 7.5, 3.8, 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#d97706";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, -26);
+    ctx.lineTo(11, -26);
+    ctx.stroke();
+  }
+
+  // Aerodynamic streamlined swimming pose
+  function drawTuxSwimming(
+    ctx: CanvasRenderingContext2D,
+    _frame: number,
+    time: number
+  ) {
+    // Pointed penguin tail
+    ctx.fillStyle = "#18181b";
+    ctx.beginPath();
+    ctx.moveTo(-16, -4);
+    ctx.lineTo(-24, 0);
+    ctx.lineTo(-16, 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Streamlined feet kicking briskly in water (1.5x speed)
+    const kick = Math.sin(time * 0.013) * 2.6;
+    ctx.fillStyle = "#f59e0b";
+    ctx.beginPath();
+    ctx.ellipse(-17, -4 + kick, 6, 2.8, 0.15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(-17, 4 - kick, 6, 2.8, -0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Horizontal Torso
+    ctx.fillStyle = "#18181b";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 20, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // White belly on underside
+    ctx.fillStyle = "#f4f4f5";
+    ctx.beginPath();
+    ctx.ellipse(1, 3.2, 16, 7.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head pointing forward
+    ctx.fillStyle = "#18181b";
+    ctx.beginPath();
+    ctx.ellipse(18, 0, 11, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Determined eyes focused ahead
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.ellipse(19, -3.5, 3.5, 4.5, 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#09090b";
+    ctx.beginPath();
+    ctx.arc(20.5, -3.5, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(20, -5, 1, 1);
+
+    // Beak pointing forward
+    ctx.fillStyle = "#f59e0b";
+    ctx.beginPath();
+    ctx.ellipse(26, 0, 7, 3.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flippers gliding with energetic rhythmic swimming stroke (1.5x speed)
+    const stroke = Math.sin(time * 0.014);
+    ctx.fillStyle = "#18181b";
+    // Upper flipper (sweeps back and forward gracefully)
+    ctx.beginPath();
+    ctx.ellipse(-2, -9 - stroke * 2, 4.5, 9.5, -0.6 + stroke * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+    // Lower flipper
+    ctx.beginPath();
+    ctx.ellipse(-2, 9 + stroke * 2, 4.5, 9.5, 0.6 - stroke * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Standing/Resting/Sleeping Pose with dynamic actions (wing flapping, head tilts, curious glances)
+  function drawTuxStanding(
+    ctx: CanvasRenderingContext2D,
+    frame: number,
+    isSleeping: boolean,
+    time: number
+  ) {
+    // Action cycle for standing (every ~4.2 seconds)
+    const cycle = (time * 0.001) % 4.2;
+
+    // Default angles & offsets
+    let leftWingAngle = 0.4;
+    let rightWingAngle = -0.4;
+    let leftWingY = -18;
+    let rightWingY = -18;
+    let chestPuff = 0;
+    let headTilt = 0;
+    let headX = 0;
+    let footTap = 0;
+    let eyeGlanceX = 0;
+
+    if (!isSleeping) {
+      if (cycle < 1.4) {
+        // ACTION 1: Energetic wing flapping! (Penguin flaps flippers up and down excitedly!)
+        const flapCycle = Math.sin(time * 0.024); // energetic penguin wing flap
+        leftWingAngle = 0.5 + flapCycle * 0.95; // raises wings up and flaps down!
+        rightWingAngle = -0.5 - flapCycle * 0.95;
+        leftWingY = -18 - Math.max(0, flapCycle) * 4;
+        rightWingY = -18 - Math.max(0, flapCycle) * 4;
+        chestPuff = Math.sin(time * 0.024) * 1.6;
+        footTap = Math.max(0, Math.sin(time * 0.024) * 2.5);
+      } else if (cycle < 2.6) {
+        // ACTION 2: Curious head tilt and look around the website
+        headTilt = Math.sin((cycle - 1.4) * Math.PI) * 0.16;
+        headX = Math.sin((cycle - 1.4) * Math.PI) * 1.5;
+        eyeGlanceX = Math.sin((cycle - 1.4) * Math.PI * 2) * 1.5;
+        leftWingAngle = 0.35 + Math.sin(time * 0.003) * 0.08;
+        rightWingAngle = -0.35 - Math.sin(time * 0.003) * 0.08;
+      } else {
+        // ACTION 3: Proud relaxed stance with gentle breathing
+        const breathe = Math.sin(time * 0.004) * 0.8;
+        chestPuff = breathe;
+        leftWingAngle = 0.4 + breathe * 0.06;
+        rightWingAngle = -0.4 - breathe * 0.06;
+      }
+    }
+
+    // Subtle ground shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.beginPath();
+    ctx.ellipse(0, -2, 16 + (chestPuff > 0 ? 1 : 0), 4.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Feet (with cute foot tap during flapping)
+    ctx.fillStyle = "#f59e0b";
+    ctx.beginPath();
+    ctx.ellipse(-8, -1 - footTap, 7.5, 3.5, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(8, -1, 7.5, 3.5, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Charcoal Black Body Torso (reacts to chest puff)
+    ctx.fillStyle = "#18181b";
+    ctx.beginPath();
+    ctx.ellipse(0, -18, 16 + chestPuff * 0.6, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // White Belly
+    ctx.fillStyle = "#f4f4f5";
+    ctx.beginPath();
+    ctx.ellipse(2.5 + chestPuff * 0.4, -16, 10.5 + chestPuff * 0.5, 13.5, 0.05, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flippers / Wings (Flapping & Gesturing!)
+    ctx.fillStyle = "#18181b";
+    // Left Flipper
+    ctx.beginPath();
+    ctx.ellipse(-14, leftWingY, 4.5, 11, leftWingAngle, 0, Math.PI * 2);
+    ctx.fill();
+    // Right Flipper
+    ctx.beginPath();
+    ctx.ellipse(13, rightWingY, 4.5, 11, rightWingAngle, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head (with cute tilting and look around)
+    ctx.save();
+    ctx.translate(headX, 0);
+    ctx.rotate(headTilt);
+
+    // Charcoal Black Head
+    ctx.fillStyle = "#18181b";
+    ctx.beginPath();
+    ctx.ellipse(0, -31, 12.5, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eyes
+    if (isSleeping || frame === 4) {
+      // Sleeping / squinting eyes (- -)
+      ctx.strokeStyle = "#18181b";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(2, -32, 3, Math.PI, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(8, -32, 3, Math.PI, 0);
+      ctx.stroke();
+    } else if (frame === 1) {
+      // Blinking eye slit while resting
+      ctx.fillStyle = "#18181b";
+      ctx.fillRect(1, -33, 5, 2);
+      ctx.fillRect(7, -33, 5, 2);
+    } else {
+      // Open Big Expressive Eyes
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.ellipse(2, -32, 3.8, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(8, -32, 3.8, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pupils looking around curiously
+      ctx.fillStyle = "#09090b";
+      ctx.beginPath();
+      ctx.arc(3.2 + eyeGlanceX, -32, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(9.2 + eyeGlanceX, -32, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eye glint reflections
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(2.5 + eyeGlanceX * 0.5, -34, 1.2, 1.2);
+      ctx.fillRect(8.5 + eyeGlanceX * 0.5, -34, 1.2, 1.2);
+    }
+
+    // Beak
+    ctx.fillStyle = "#f59e0b";
+    ctx.beginPath();
+    ctx.ellipse(5, -26, 7.5, 3.8, 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#d97706";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, -26);
+    ctx.lineTo(11, -26);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawZzz(ctx: CanvasRenderingContext2D, time: number) {
+    const t = time * 0.00065; // Much slower, gentle, peaceful sleeping pace
+
+    // Z 1 (small, floating up gently near beak)
+    const p1 = (t * 14) % 28;
+    const z1y = -36 - p1;
+    const z1x = 10 + Math.sin(t * 2.0) * 4;
+    const alpha1 = Math.max(0, 0.8 * (1 - p1 / 28));
+    ctx.fillStyle = `rgba(148, 163, 184, ${alpha1})`;
+    ctx.font = "bold 9px monospace";
+    ctx.fillText("z", z1x, z1y);
+
+    // Z 2 (medium, floating higher)
+    const p2 = ((t + 0.38) * 14) % 28;
+    const z2y = -38 - p2;
+    const z2x = 15 + Math.sin((t + 0.38) * 2.0) * 5;
+    const alpha2 = Math.max(0, 0.8 * (1 - p2 / 28));
+    ctx.fillStyle = `rgba(148, 163, 184, ${alpha2})`;
+    ctx.font = "bold 11px monospace";
+    ctx.fillText("z", z2x, z2y);
+
+    // Z 3 (large, fading away softly)
+    const p3 = ((t + 0.74) * 14) % 28;
+    const z3y = -40 - p3;
+    const z3x = 20 + Math.sin((t + 0.74) * 2.0) * 6;
+    const alpha3 = Math.max(0, 0.8 * (1 - p3 / 28));
+    ctx.fillStyle = `rgba(148, 163, 184, ${alpha3})`;
+    ctx.font = "bold 13px monospace";
+    ctx.fillText("Z", z3x, z3y);
+  }
+
+  function wrapText(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    maxWidth: number
+  ): string[] {
+    const words = text.split(" ");
+    const lines: string[] = [];
+    let currentLine = "";
+
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      if (ctx.measureText(testLine).width <= maxWidth || !currentLine) {
+        currentLine = testLine;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    return lines;
+  }
+
+  function drawSpeechBubble(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    text: string
+  ) {
+    ctx.save();
+    const isSmall = window.innerWidth < 640;
+    const fontSize = isSmall ? 10.5 : 12;
+    // Elegant, calm italic thought typography: non-distracting, clean, readable
+    ctx.font = `italic 500 ${fontSize}px "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Compact tight wrapping above Tux: 135px on small screens, 160px on desktop
+    const maxWrap = isSmall ? 135 : 160;
+    const lines = wrapText(ctx, text, maxWrap);
+    const maxLineWidth = Math.max(...lines.map((l) => ctx.measureText(l).width));
+
+    const margin = isSmall ? 8 : 12;
+    const clampedX = Math.min(
+      Math.max(x, maxLineWidth * 0.5 + margin),
+      window.innerWidth - maxLineWidth * 0.5 - margin
+    );
+
+    const lineHeight = isSmall ? 14 : 16;
+    const totalHeight = lines.length * lineHeight;
+    const startY = Math.max(isSmall ? 16 : 22, y - (totalHeight - lineHeight) * 0.5);
+
+    // Tasteful, non-distracting soft pearl/slate silver text with subtle dark definition
+    ctx.lineJoin = "round";
+    ctx.miterLimit = 2;
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = "rgba(15, 23, 42, 0.82)";
+    ctx.fillStyle = "#e2e8f0";
+
+    for (let i = 0; i < lines.length; i++) {
+      const lineY = startY + i * lineHeight;
+      ctx.strokeText(lines[i], clampedX, lineY);
+      ctx.fillText(lines[i], clampedX, lineY);
+    }
+
+    ctx.restore();
+  }
+
+  // Lifecycle handling (single active instance guaranteed)
+  let initTriggered = false;
+  function handleInit() {
+    if (initTriggered && isSimulationActive) return;
+    initTriggered = true;
+    initTuxWorld();
+  }
+
+  if (document.readyState === "complete" || document.readyState === "interactive") {
+    handleInit();
+  }
+  document.addEventListener("astro:page-load", () => {
+    initTriggered = false;
+    handleInit();
+  });
+</script>
