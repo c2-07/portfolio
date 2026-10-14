@@ -161,7 +161,33 @@
     "entering power save mode... zzz",
   ];
 
-  let wasmInstance: any = null;
+  // WASM simulation engine interface
+  interface TuxWasmEngine {
+    sim_init: (w: number, h: number, x: number, y: number) => void;
+    sim_tick: (dt: number) => void;
+    set_screen_size: (w: number, h: number) => void;
+    set_home_pos: (x: number, y: number) => void;
+    click_tux: () => void;
+    drop_fish: (x: number, y: number) => void;
+    despawn_fish: () => void;
+    get_x: () => number;
+    get_y: () => number;
+    get_vx: () => number;
+    get_vy: () => number;
+    get_facing: () => number;
+    get_state: () => number;
+    get_anim_frame: () => number;
+    get_swim_angle: () => number;
+    get_spin_angle: () => number;
+    get_fish_x: () => number;
+    get_fish_y: () => number;
+    get_fish_dropped: () => number;
+    get_speech_timer: () => number;
+    get_speech_id: () => number;
+    [key: string]: any;
+  }
+
+  let wasmInstance: TuxWasmEngine | null = null;
   let animReqId: number | null = null;
   let isSimulationActive = false;
 
@@ -219,13 +245,13 @@
     return 1.0;
   }
 
-  async function loadWasm() {
+  async function loadWasm(): Promise<TuxWasmEngine | null> {
     try {
       const response = await fetch("/wasm/tux_sim.wasm");
       if (response.ok) {
         const bytes = await response.arrayBuffer();
         const module = await WebAssembly.instantiate(bytes, {});
-        return module.instance.exports;
+        return module.instance.exports as unknown as TuxWasmEngine;
       }
     } catch (e) {
       console.warn("WASM fetch failed, using embedded base64 fallback:", e);
@@ -239,7 +265,7 @@
         bytes[i] = binaryString.charCodeAt(i);
       }
       const module = await WebAssembly.instantiate(bytes.buffer, {});
-      return module.instance.exports;
+      return module.instance.exports as unknown as TuxWasmEngine;
     } catch (err) {
       console.error("Failed to load Tux WASM module:", err);
       return null;
@@ -280,8 +306,9 @@
     const worldCanvas = document.getElementById("tux-world-canvas") as HTMLCanvasElement;
     if (!worldCanvas) return;
 
-    const wCtx = worldCanvas.getContext("2d");
-    if (!wCtx) return;
+    const canvasCtx = worldCanvas.getContext("2d");
+    if (!canvasCtx) return;
+    const wCtx: CanvasRenderingContext2D = canvasCtx;
 
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
 
@@ -308,8 +335,10 @@
     }
 
     // Load and initialize WASM simulation
-    loadWasm().then((wasm) => {
-      if (!wasm) return;
+    loadWasm().then((loadedWasm) => {
+      if (!loadedWasm) return;
+      const wasm: TuxWasmEngine = loadedWasm;
+      const wCtx: CanvasRenderingContext2D = canvasCtx;
       wasmInstance = wasm;
 
       const home = getTuxHomePos();
