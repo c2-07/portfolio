@@ -4,6 +4,7 @@ import SpeedInsights from "@vercel/speed-insights/astro";
 import "../styles/global.css";
 import Header from "../components/ui/Header.astro";
 import Footer from "../components/ui/Footer.astro";
+import TuxSimulation from "../components/ui/TuxSimulation.astro";
 import { ClientRouter } from "astro:transitions";
 
 const { title = "gouravv.tech", description = "My portfolio website" } =
@@ -40,6 +41,7 @@ const { title = "gouravv.tech", description = "My portfolio website" } =
     class="bg-(--bg) min-h-screen font-mono flex flex-col pt-24 md:pt-28 max-w-4xl mx-auto w-full relative"
   >
     <Header />
+    <TuxSimulation />
     <main class="w-full px-4 md:px-12 lg:px-16 flex-1 flex flex-col">
       <slot />
     </main>
