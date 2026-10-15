@@ -196,7 +196,9 @@
   let boundPointerMove: ((e: PointerEvent) => void) | null = null;
   let boundPointerUp: ((e: PointerEvent) => void) | null = null;
   let boundPointerCancel: ((e: PointerEvent) => void) | null = null;
+  let boundDragStart: ((e: DragEvent) => void) | null = null;
   let boundResize: (() => void) | null = null;
+  let boundVisibilityChange: (() => void) | null = null;
 
   // Hydrodynamic water wake ripples emitted from flippers slicing water
   interface WaterWake {
@@ -212,10 +214,9 @@
 
   // Grabbing & Dragging state for fish
   let isHoldingFish = false;
-  let grabStartTime = 0;
-  let grabStartX = 0;
-  let grabStartY = 0;
-  let dragDistance = 0;
+  let isDraggingFish = false;
+  let dragStartPos = { x: 0, y: 0 };
+  let hasDragged = false;
   let mousePos = { x: 0, y: 0 };
 
   // Dynamic scale for Tux according to screen width:
@@ -293,9 +294,17 @@
       window.removeEventListener("pointercancel", boundPointerCancel);
       boundPointerCancel = null;
     }
+    if (boundDragStart) {
+      window.removeEventListener("dragstart", boundDragStart);
+      boundDragStart = null;
+    }
     if (boundResize) {
       window.removeEventListener("resize", boundResize);
       boundResize = null;
+    }
+    if (boundVisibilityChange) {
+      document.removeEventListener("visibilitychange", boundVisibilityChange);
+      boundVisibilityChange = null;
     }
     isSimulationActive = false;
   }
@@ -310,10 +319,10 @@
     if (!canvasCtx) return;
     const wCtx: CanvasRenderingContext2D = canvasCtx;
 
-    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
     function resizeWorld() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       worldCanvas.width = window.innerWidth * dpr;
       worldCanvas.height = window.innerHeight * dpr;
       if (wasmInstance) {
@@ -345,37 +354,26 @@
       wasm.sim_init(window.innerWidth, window.innerHeight, home.x, home.y);
       isSimulationActive = true;
 
-      // --- Blue Fish Toggle Button in Top Right ---
       // --- Blue Fish Dispenser Button in Top Right ---
       const fishBtn = document.getElementById("tux-fish-toggle-btn") as HTMLButtonElement | null;
       const fishIndicator = document.getElementById("tux-fish-toggle-indicator");
 
-      let activePointerId: number | null = null;
-      let isDragFromButton = false;
+      const FISH_HIT_RADIUS = 55;
+      const TUX_HIT_RADIUS = 50;
 
-      function startHoldingFish(mx: number, my: number, pointerId?: number, fromButton = false) {
+      function startHoldingFish(mx: number, my: number, isDrag: boolean) {
         isHoldingFish = true;
-        isDragFromButton = fromButton;
-        grabStartTime = performance.now();
-        grabStartX = mx;
-        grabStartY = my;
-        dragDistance = 0;
+        isDraggingFish = isDrag;
+        dragStartPos = { x: mx, y: my };
+        hasDragged = false;
         mousePos = { x: mx, y: my };
 
-        if (pointerId !== undefined && fishBtn) {
-          try {
-            fishBtn.setPointerCapture(pointerId);
-            activePointerId = pointerId;
-          } catch (_) {}
-        }
-
-        // Despawn any existing dropped fish so user is moving/holding one single fish
+        // Despawn any existing dropped fish in simulation so user holds it
         if (wasmInstance && typeof wasmInstance.despawn_fish === "function") {
           wasmInstance.despawn_fish();
         }
 
-        worldCanvas.style.pointerEvents = "auto";
-        worldCanvas.style.cursor = "grabbing";
+        document.body.style.userSelect = "none";
         document.body.style.cursor = "grabbing";
 
         if (fishBtn) {
@@ -385,17 +383,9 @@
 
       function releaseFish(drop: boolean, mx?: number, my?: number) {
         isHoldingFish = false;
-        isDragFromButton = false;
+        isDraggingFish = false;
 
-        if (activePointerId !== null && fishBtn) {
-          try {
-            fishBtn.releasePointerCapture(activePointerId);
-          } catch (_) {}
-          activePointerId = null;
-        }
-
-        worldCanvas.style.pointerEvents = "none";
-        worldCanvas.style.cursor = "default";
+        document.body.style.userSelect = "";
         document.body.style.cursor = "default";
 
         if (fishBtn) {
@@ -415,18 +405,21 @@
         fishBtn.addEventListener("keydown", (e: KeyboardEvent) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            // Drop fish right in the visible webpage area
-            const dropX = Math.round(window.innerWidth * 0.5);
-            const dropY = Math.round(Math.max(130, Math.min(window.innerHeight * 0.42, 340)));
-            releaseFish(true, dropX, dropY);
+            if (isHoldingFish) {
+              releaseFish(false);
+            } else {
+              if (wasmInstance && wasmInstance.get_state() === 5) {
+                wasmInstance.click_tux();
+              }
+              const dropX = Math.round(window.innerWidth * 0.5);
+              const dropY = Math.round(Math.max(130, Math.min(window.innerHeight * 0.42, 340)));
+              releaseFish(true, dropX, dropY);
+            }
           }
         });
       }
 
-      // --- Pointer Interactions (Dispenser Button, Relocating Dropped Fish & Clicking Tux) ---
-      const FISH_HIT_RADIUS = 50;
-      const TUX_HIT_RADIUS = 50;
-
+      // --- Pointer Interactions (Dispenser Button, Grabbing Dropped Fish & Clicking Tux) ---
       function onPointerDown(e: PointerEvent) {
         const mx = e.clientX;
         const my = e.clientY;
@@ -434,68 +427,50 @@
 
         const isClickOnFishBtn = fishBtn && (e.target === fishBtn || fishBtn.contains(e.target as Node));
 
-        // Case 0: Interacting with the Top-Right Fish Dispenser Button
+        // 1. Interacting with the Top-Right Fish Dispenser Button
         if (isClickOnFishBtn) {
           e.preventDefault();
           e.stopPropagation();
 
           if (isHoldingFish) {
-            // Already holding: clicking button again cancels/puts away fish
+            // Already holding fish: clicking button puts it away
             releaseFish(false);
             return;
           }
 
-          // Start dragging or holding fish from button
-          startHoldingFish(mx, my, e.pointerId, true);
+          // Pick up fish from button!
+          if (wasm.get_state() === 5) {
+            wasm.click_tux(); // Wake Tux up
+          }
+          startHoldingFish(mx, my, true);
           return;
         }
 
-        // Case 1: Already holding fish in "click-to-pick" mode and clicked anywhere on screen
+        // 2. Already holding fish: clicking drops fish right here
         if (isHoldingFish) {
           e.preventDefault();
           e.stopPropagation();
-
-          if (my > 55) {
-            // Dropped on website outside header: Tux hunts!
-            releaseFish(true, mx, my);
-          } else {
-            // Clicked inside header area: drop comfortably below header
-            releaseFish(true, mx, 120);
-          }
+          const dropY = Math.max(my, 95);
+          releaseFish(true, mx, dropY);
           return;
         }
 
-        const state = wasm.get_state();
+        // 3. Fish is already dropped on page: grabbing / re-grabbing the dropped fish
         const isDropped = wasm.get_fish_dropped() === 1;
-
-        // Case 2: Re-grabbing or relocating the already DROPPED fish on the website
         if (isDropped) {
           const droppedFishX = wasm.get_fish_x();
           const droppedFishY = wasm.get_fish_y();
           const droppedDist = Math.hypot(mx - droppedFishX, my - droppedFishY);
 
-          // If clicked directly on the dropped fish, re-grab it to drag/relocate
           if (droppedDist <= FISH_HIT_RADIUS) {
             e.preventDefault();
             e.stopPropagation();
-            startHoldingFish(mx, my, e.pointerId, false);
+            startHoldingFish(mx, my, true);
             return;
-          }
-
-          // Or if clicked anywhere on the webpage outside the header, relocate fish there immediately for Tux to chase!
-          if (my > 55) {
-            const tx = wasm.get_x();
-            const ty = wasm.get_y();
-            const tuxDist = Math.hypot(mx - tx, my - (ty - 26));
-            if (tuxDist > TUX_HIT_RADIUS) {
-              if (state === 5) wasm.click_tux();
-              wasm.drop_fish(mx, my);
-              return;
-            }
           }
         }
 
-        // Case 3: Clicking on Tux (wakes up or interacts)
+        // 4. Interacting with Tux (clicking Tux wakes him or does barrel roll)
         const tx = wasm.get_x();
         const ty = wasm.get_y();
         const tuxDist = Math.hypot(mx - tx, my - (ty - 26));
@@ -508,26 +483,35 @@
         mousePos = { x: e.clientX, y: e.clientY };
 
         if (isHoldingFish) {
-          dragDistance += Math.hypot(e.movementX || 0, e.movementY || 0);
-          worldCanvas.style.cursor = "grabbing";
+          const distMoved = Math.hypot(e.clientX - dragStartPos.x, e.clientY - dragStartPos.y);
+          if (distMoved > 10) {
+            hasDragged = true;
+          }
           document.body.style.cursor = "grabbing";
           return;
         }
 
         // Hover cursor feedback over dropped fish and Tux
         const isDropped = wasm.get_fish_dropped() === 1;
-        const droppedFishX = wasm.get_fish_x();
-        const droppedFishY = wasm.get_fish_y();
-        const droppedDist = Math.hypot(e.clientX - droppedFishX, e.clientY - droppedFishY);
+        if (isDropped) {
+          const droppedFishX = wasm.get_fish_x();
+          const droppedFishY = wasm.get_fish_y();
+          const droppedDist = Math.hypot(e.clientX - droppedFishX, e.clientY - droppedFishY);
+          if (droppedDist <= FISH_HIT_RADIUS) {
+            document.body.style.cursor = "grab";
+            return;
+          }
+        }
+
         const tx = wasm.get_x();
         const ty = wasm.get_y();
         const tuxDist = Math.hypot(e.clientX - tx, e.clientY - (ty - 26));
-
-        if (isDropped && droppedDist <= FISH_HIT_RADIUS) {
-          document.body.style.cursor = "grab";
-        } else if (tuxDist <= TUX_HIT_RADIUS) {
+        if (tuxDist <= TUX_HIT_RADIUS) {
           document.body.style.cursor = "pointer";
-        } else if (
+          return;
+        }
+
+        if (
           document.body.style.cursor === "grab" ||
           document.body.style.cursor === "pointer" ||
           document.body.style.cursor === "grabbing"
@@ -541,43 +525,36 @@
 
         const mx = e.clientX;
         const my = e.clientY;
-        const holdDuration = performance.now() - grabStartTime;
 
-        // Did the user tap without dragging? (e.g. quick tap on mobile or stationary click on button)
-        if (isDragFromButton && dragDistance < 15) {
-          // Tap on button: drop fish directly in the comfortable active webpage area!
+        // If user was actively dragging (held down and moved > 10px):
+        if (isDraggingFish && hasDragged) {
+          const dropY = Math.max(my, 95);
+          releaseFish(true, mx, dropY);
+          return;
+        }
+
+        // If it was a quick tap on touch screen:
+        if (e.pointerType === "touch") {
           const dropX = Math.round(window.innerWidth * 0.5);
           const dropY = Math.round(Math.max(130, Math.min(window.innerHeight * 0.42, 340)));
           releaseFish(true, dropX, dropY);
           return;
         }
 
-        // If user dragged the fish:
-        if (dragDistance >= 15 || holdDuration > 200) {
-          if (my > 55) {
-            // Dropped outside header onto the website: Tux hunts it!
-            releaseFish(true, mx, my);
-          } else {
-            // Released inside header area: drop comfortably below header so it is never lost!
-            releaseFish(true, mx, 120);
-          }
-          return;
-        }
-
-        // On desktop mouse: stationary click away from button keeps holding in pick mode
-        if (e.pointerType === "mouse") {
-          return;
-        }
-
-        // On touch device: if somehow released without dropping, drop in visible center
-        const dropX = Math.round(window.innerWidth * 0.5);
-        const dropY = Math.round(Math.max(130, Math.min(window.innerHeight * 0.42, 340)));
-        releaseFish(true, dropX, dropY);
+        // On desktop mouse: stationary click keeps the fish in "follow cursor" mode until next click!
+        isDraggingFish = false;
       }
 
       function onPointerCancel() {
+        if (isHoldingFish && isDraggingFish && hasDragged) {
+          const dropY = Math.max(mousePos.y, 95);
+          releaseFish(true, mousePos.x, dropY);
+        }
+      }
+
+      function onDragStart(e: DragEvent) {
         if (isHoldingFish) {
-          releaseFish(false);
+          e.preventDefault();
         }
       }
 
@@ -585,21 +562,55 @@
       boundPointerMove = onPointerMove;
       boundPointerUp = onPointerUp;
       boundPointerCancel = onPointerCancel;
+      boundDragStart = onDragStart;
 
       window.addEventListener("pointerdown", onPointerDown, { capture: true });
       window.addEventListener("pointermove", onPointerMove);
       window.addEventListener("pointerup", onPointerUp, { capture: true });
       window.addEventListener("pointercancel", onPointerCancel);
+      window.addEventListener("dragstart", onDragStart);
+
+      // Page Visibility API: completely pause loop when tab is hidden to save 100% CPU
+      function onVisibilityChange() {
+        if (document.hidden) {
+          if (animReqId !== null) {
+            cancelAnimationFrame(animReqId);
+            animReqId = null;
+          }
+        } else {
+          if (isSimulationActive && animReqId === null) {
+            lastTime = performance.now();
+            lastRenderTime = performance.now();
+            animReqId = requestAnimationFrame(worldLoop);
+          }
+        }
+      }
+      boundVisibilityChange = onVisibilityChange;
+      document.addEventListener("visibilitychange", onVisibilityChange);
 
       let lastTime = performance.now();
+      let lastRenderTime = 0;
 
       function worldLoop(now: number) {
         if (!isSimulationActive) return;
 
-        const dt = (now - lastTime) / 1000;
-        lastTime = now;
-
+        // Adaptive frame rate:
+        // - When Tux is sleeping & no fish active: throttle to ~20 FPS (50ms interval)
+        // - When Tux is active/swimming or fish is held/dropped: throttle to ~60 FPS (16ms interval)
+        const currentState = wasm.get_state();
         const isDropped = wasm.get_fish_dropped() === 1;
+        const isIdleSleep = currentState === 5 && !isHoldingFish && !isDropped;
+        const minFrameInterval = isIdleSleep ? 48 : 16;
+
+        if (now - lastRenderTime < minFrameInterval) {
+          animReqId = requestAnimationFrame(worldLoop);
+          return;
+        }
+
+        const dt = Math.min((now - lastTime) / 1000, 0.05);
+        lastTime = now;
+        lastRenderTime = now;
+
         const droppedFishX = wasm.get_fish_x();
         const droppedFishY = wasm.get_fish_y();
 
@@ -667,16 +678,13 @@
           wCtx.stroke();
 
           // Drop guidance text
-          if (mousePos.y > 55) {
-            wCtx.font = "bold 11px monospace";
-            wCtx.fillStyle = "#38bdf8";
-            wCtx.textAlign = "center";
-            wCtx.fillText("drop fish here", mousePos.x, mousePos.y + 36);
+          wCtx.font = "bold 11px monospace";
+          wCtx.fillStyle = "#38bdf8";
+          wCtx.textAlign = "center";
+          if (mousePos.y > 60) {
+            wCtx.fillText("click or release to drop fish", mousePos.x, mousePos.y + 36);
           } else {
-            wCtx.font = "10px monospace";
-            wCtx.fillStyle = "#94a3b8";
-            wCtx.textAlign = "center";
-            wCtx.fillText("move below header to drop", mousePos.x, mousePos.y + 36);
+            wCtx.fillText("move below header to feed Tux", mousePos.x, mousePos.y + 36);
           }
           wCtx.restore();
 
@@ -694,23 +702,21 @@
           wCtx.fill();
           wCtx.stroke();
 
-          // If mouse is near dropped fish, show grab target ring and "MOVE" hint
+          // If mouse is near dropped fish, show grab target ring and "GRAB FISH" hint
           const droppedDist = Math.hypot(mousePos.x - droppedFishX, mousePos.y - droppedFishY);
           if (droppedDist <= FISH_HIT_RADIUS) {
             wCtx.strokeStyle = "#38bdf8";
-            wCtx.fillStyle = "rgba(56, 189, 248, 0.18)";
+            wCtx.fillStyle = "rgba(56, 189, 248, 0.22)";
             wCtx.lineWidth = 2;
-            wCtx.shadowColor = "#38bdf8";
-            wCtx.shadowBlur = 8;
             wCtx.beginPath();
-            wCtx.arc(droppedFishX, droppedFishY, (22 + Math.sin(now * 0.01) * 3) * getFishScaleMultiplier(), 0, Math.PI * 2);
+            wCtx.arc(droppedFishX, droppedFishY, (24 + Math.sin(now * 0.01) * 3) * getFishScaleMultiplier(), 0, Math.PI * 2);
             wCtx.fill();
             wCtx.stroke();
 
-            wCtx.font = "bold 9px monospace";
+            wCtx.font = "bold 10px monospace";
             wCtx.fillStyle = "#38bdf8";
             wCtx.textAlign = "center";
-            wCtx.fillText("MOVE", droppedFishX, droppedFishY - 20);
+            wCtx.fillText("GRAB FISH", droppedFishX, droppedFishY - 22);
           }
           wCtx.restore();
 
@@ -794,7 +800,7 @@
 
     // Cyan Neon Glow
     ctx.shadowColor = "#38bdf8";
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 4;
 
     // Body gradient
     const bodyGrad = ctx.createLinearGradient(-10, -5, 10, 5);
