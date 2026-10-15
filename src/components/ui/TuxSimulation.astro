@@ -17,6 +17,7 @@
 <button
   id="tux-fish-toggle-btn"
   type="button"
+  draggable="false"
   aria-label="Feed Tux a fish"
   title="Feed Tux a fish (tap or drag onto page)"
   class="fixed top-2.5 right-[98px] sm:top-3.5 sm:right-6 md:top-4 md:right-8 z-[70] flex items-center justify-center w-10 h-10 rounded-full border border-sky-500/30 bg-surface/85 hover:bg-surface text-sky-400 hover:text-sky-300 backdrop-blur-md shadow-md shadow-sky-950/20 hover:shadow-sky-500/25 hover:border-sky-400 hover:scale-110 active:scale-95 transition-all duration-300 cursor-grab active:cursor-grabbing group focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 touch-none select-none before:absolute before:-inset-2 before:content-['']"
@@ -196,6 +197,8 @@
   let boundPointerMove: ((e: PointerEvent) => void) | null = null;
   let boundPointerUp: ((e: PointerEvent) => void) | null = null;
   let boundPointerCancel: ((e: PointerEvent) => void) | null = null;
+  let boundMouseDown: ((e: MouseEvent) => void) | null = null;
+  let boundSelectStart: ((e: Event) => void) | null = null;
   let boundDragStart: ((e: DragEvent) => void) | null = null;
   let boundResize: (() => void) | null = null;
   let boundVisibilityChange: (() => void) | null = null;
@@ -283,7 +286,7 @@
       boundPointerDown = null;
     }
     if (boundPointerMove) {
-      window.removeEventListener("pointermove", boundPointerMove);
+      window.removeEventListener("pointermove", boundPointerMove, { capture: true });
       boundPointerMove = null;
     }
     if (boundPointerUp) {
@@ -291,8 +294,16 @@
       boundPointerUp = null;
     }
     if (boundPointerCancel) {
-      window.removeEventListener("pointercancel", boundPointerCancel);
+      window.removeEventListener("pointercancel", boundPointerCancel, { capture: true });
       boundPointerCancel = null;
+    }
+    if (boundMouseDown) {
+      window.removeEventListener("mousedown", boundMouseDown, { capture: true });
+      boundMouseDown = null;
+    }
+    if (boundSelectStart) {
+      document.removeEventListener("selectstart", boundSelectStart);
+      boundSelectStart = null;
     }
     if (boundDragStart) {
       window.removeEventListener("dragstart", boundDragStart);
@@ -306,10 +317,33 @@
       document.removeEventListener("visibilitychange", boundVisibilityChange);
       boundVisibilityChange = null;
     }
+
+    const worldCanvas = document.getElementById("tux-world-canvas") as HTMLCanvasElement | null;
+    if (worldCanvas) {
+      worldCanvas.style.pointerEvents = "none";
+    }
+    document.body.style.userSelect = "";
+    document.body.style.webkitUserSelect = "";
+    document.body.style.touchAction = "";
+    document.body.style.cursor = "default";
+
     isSimulationActive = false;
+    isHoldingFish = false;
+    isDraggingFish = false;
   }
 
   function initTuxWorld() {
+    // 1. Global Singleton Controller to guarantee ONLY ONE active simulation and set of listeners
+    if ((window as any).__tuxController) {
+      (window as any).__tuxController.cleanup();
+    }
+
+    const currentInstanceId = ((window as any).__tuxNextId = ((window as any).__tuxNextId || 0) + 1);
+    (window as any).__tuxController = {
+      instanceId: currentInstanceId,
+      cleanup: cleanupSimulation,
+    };
+
     cleanupSimulation();
 
     const worldCanvas = document.getElementById("tux-world-canvas") as HTMLCanvasElement;
@@ -345,9 +379,12 @@
 
     // Load and initialize WASM simulation
     loadWasm().then((loadedWasm) => {
-      if (!loadedWasm) return;
+      // If a newer instance has started or this instance was cleaned up, bail out!
+      if (!loadedWasm || (window as any).__tuxController?.instanceId !== currentInstanceId) {
+        return;
+      }
+
       const wasm: TuxWasmEngine = loadedWasm;
-      const wCtx: CanvasRenderingContext2D = canvasCtx;
       wasmInstance = wasm;
 
       const home = getTuxHomePos();
@@ -358,14 +395,17 @@
       const fishBtn = document.getElementById("tux-fish-toggle-btn") as HTMLButtonElement | null;
       const fishIndicator = document.getElementById("tux-fish-toggle-indicator");
 
-      const FISH_HIT_RADIUS = 55;
+      const FISH_HIT_RADIUS = 60;
       const TUX_HIT_RADIUS = 50;
+
+      let justPickedUp = false;
 
       function startHoldingFish(mx: number, my: number, isDrag: boolean) {
         isHoldingFish = true;
         isDraggingFish = isDrag;
         dragStartPos = { x: mx, y: my };
         hasDragged = false;
+        justPickedUp = true;
         mousePos = { x: mx, y: my };
 
         // Despawn any existing dropped fish in simulation so user holds it
@@ -373,7 +413,14 @@
           wasmInstance.despawn_fish();
         }
 
+        try {
+          window.getSelection()?.removeAllRanges();
+        } catch (_) {}
+
+        worldCanvas.style.pointerEvents = "auto";
         document.body.style.userSelect = "none";
+        document.body.style.webkitUserSelect = "none";
+        document.body.style.touchAction = "none";
         document.body.style.cursor = "grabbing";
 
         if (fishBtn) {
@@ -384,8 +431,13 @@
       function releaseFish(drop: boolean, mx?: number, my?: number) {
         isHoldingFish = false;
         isDraggingFish = false;
+        hasDragged = false;
+        justPickedUp = false;
 
+        worldCanvas.style.pointerEvents = "none";
         document.body.style.userSelect = "";
+        document.body.style.webkitUserSelect = "";
+        document.body.style.touchAction = "";
         document.body.style.cursor = "default";
 
         if (fishBtn) {
@@ -400,6 +452,19 @@
           wasmInstance.drop_fish(mx, my);
         }
       }
+
+      (window as any).__tuxDebug = {
+        get isHoldingFish() { return isHoldingFish; },
+        get isDraggingFish() { return isDraggingFish; },
+        get hasDragged() { return hasDragged; },
+        get mousePos() { return mousePos; },
+        get fishDropped() { return wasmInstance ? wasmInstance.get_fish_dropped() : -1; },
+        get fishX() { return wasmInstance ? wasmInstance.get_fish_x() : -1; },
+        get fishY() { return wasmInstance ? wasmInstance.get_fish_y() : -1; },
+        get state() { return wasmInstance ? wasmInstance.get_state() : -1; },
+        startHoldingFish,
+        releaseFish,
+      };
 
       if (fishBtn) {
         fishBtn.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -426,6 +491,11 @@
         mousePos = { x: mx, y: my };
 
         const isClickOnFishBtn = fishBtn && (e.target === fishBtn || fishBtn.contains(e.target as Node));
+        const isDropped = wasm.get_fish_dropped() === 1;
+        const droppedFishX = wasm.get_fish_x();
+        const droppedFishY = wasm.get_fish_y();
+        const droppedDist = isDropped ? Math.hypot(mx - droppedFishX, my - droppedFishY) : Infinity;
+        const isClickOnDroppedFish = droppedDist <= FISH_HIT_RADIUS;
 
         // 1. Interacting with the Top-Right Fish Dispenser Button
         if (isClickOnFishBtn) {
@@ -433,12 +503,11 @@
           e.stopPropagation();
 
           if (isHoldingFish) {
-            // Already holding fish: clicking button puts it away
+            // Already holding fish: clicking button safely puts it away
             releaseFish(false);
             return;
           }
 
-          // Pick up fish from button!
           if (wasm.get_state() === 5) {
             wasm.click_tux(); // Wake Tux up
           }
@@ -446,28 +515,22 @@
           return;
         }
 
-        // 2. Already holding fish: clicking drops fish right here
+        // 2. Grabbing / Re-grabbing the dropped fish from the webpage
+        if (isClickOnDroppedFish && !isHoldingFish) {
+          e.preventDefault();
+          e.stopPropagation();
+          startHoldingFish(mx, my, true);
+          return;
+        }
+
+        // 3. Already holding fish: clicking anywhere on the webpage drops it
         if (isHoldingFish) {
+          if (justPickedUp) return;
           e.preventDefault();
           e.stopPropagation();
           const dropY = Math.max(my, 95);
           releaseFish(true, mx, dropY);
           return;
-        }
-
-        // 3. Fish is already dropped on page: grabbing / re-grabbing the dropped fish
-        const isDropped = wasm.get_fish_dropped() === 1;
-        if (isDropped) {
-          const droppedFishX = wasm.get_fish_x();
-          const droppedFishY = wasm.get_fish_y();
-          const droppedDist = Math.hypot(mx - droppedFishX, my - droppedFishY);
-
-          if (droppedDist <= FISH_HIT_RADIUS) {
-            e.preventDefault();
-            e.stopPropagation();
-            startHoldingFish(mx, my, true);
-            return;
-          }
         }
 
         // 4. Interacting with Tux (clicking Tux wakes him or does barrel roll)
@@ -484,7 +547,7 @@
 
         if (isHoldingFish) {
           const distMoved = Math.hypot(e.clientX - dragStartPos.x, e.clientY - dragStartPos.y);
-          if (distMoved > 10) {
+          if (distMoved > 8) {
             hasDragged = true;
           }
           document.body.style.cursor = "grabbing";
@@ -526,7 +589,7 @@
         const mx = e.clientX;
         const my = e.clientY;
 
-        // If user was actively dragging (held down and moved > 10px):
+        // If user was actively dragging (held down and moved > 8px):
         if (isDraggingFish && hasDragged) {
           const dropY = Math.max(my, 95);
           releaseFish(true, mx, dropY);
@@ -543,6 +606,7 @@
 
         // On desktop mouse: stationary click keeps the fish in "follow cursor" mode until next click!
         isDraggingFish = false;
+        justPickedUp = false;
       }
 
       function onPointerCancel() {
@@ -558,16 +622,40 @@
         }
       }
 
+      function onMouseDown(e: MouseEvent) {
+        const mx = e.clientX;
+        const my = e.clientY;
+        const isClickOnFishBtn = fishBtn && (e.target === fishBtn || fishBtn.contains(e.target as Node));
+        const isDropped = wasm.get_fish_dropped() === 1;
+        const isNearFish = isDropped && Math.hypot(mx - wasm.get_fish_x(), my - wasm.get_fish_y()) <= FISH_HIT_RADIUS;
+
+        if (isHoldingFish || isClickOnFishBtn || isNearFish) {
+          e.preventDefault();
+        }
+      }
+
+      function onSelectStart(e: Event) {
+        const isDropped = wasm.get_fish_dropped() === 1;
+        const isNearFish = isDropped && Math.hypot(mousePos.x - wasm.get_fish_x(), mousePos.y - wasm.get_fish_y()) <= FISH_HIT_RADIUS;
+        if (isHoldingFish || isNearFish) {
+          e.preventDefault();
+        }
+      }
+
       boundPointerDown = onPointerDown;
       boundPointerMove = onPointerMove;
       boundPointerUp = onPointerUp;
       boundPointerCancel = onPointerCancel;
+      boundMouseDown = onMouseDown;
+      boundSelectStart = onSelectStart;
       boundDragStart = onDragStart;
 
       window.addEventListener("pointerdown", onPointerDown, { capture: true });
-      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointermove", onPointerMove, { capture: true });
       window.addEventListener("pointerup", onPointerUp, { capture: true });
-      window.addEventListener("pointercancel", onPointerCancel);
+      window.addEventListener("pointercancel", onPointerCancel, { capture: true });
+      window.addEventListener("mousedown", onMouseDown, { capture: true });
+      document.addEventListener("selectstart", onSelectStart);
       window.addEventListener("dragstart", onDragStart);
 
       // Page Visibility API: completely pause loop when tab is hidden to save 100% CPU
@@ -644,9 +732,6 @@
             if (fishIndicator) {
               fishIndicator.classList.remove("opacity-100", "scale-100");
               fishIndicator.classList.add("opacity-0", "scale-50");
-            }
-            if (isHoldingFish && !isDragFromButton) {
-              releaseFish(false);
             }
           } else {
             // When Tux is awake, full brightness with glowing active indicator
@@ -1349,18 +1434,20 @@
   }
 
   // Lifecycle handling (single active instance guaranteed)
-  let initTriggered = false;
   function handleInit() {
-    if (initTriggered && isSimulationActive) return;
-    initTriggered = true;
     initTuxWorld();
   }
 
-  if (document.readyState === "complete" || document.readyState === "interactive") {
-    handleInit();
-  }
-  document.addEventListener("astro:page-load", () => {
-    initTriggered = false;
-    handleInit();
+  document.addEventListener("astro:page-load", handleInit);
+  document.addEventListener("astro:before-swap", () => {
+    if ((window as any).__tuxController) {
+      (window as any).__tuxController.cleanup();
+    }
   });
+
+  if (document.readyState === "complete" || document.readyState === "interactive") {
+    if (!(window as any).__tuxController) {
+      handleInit();
+    }
+  }
 </script>
