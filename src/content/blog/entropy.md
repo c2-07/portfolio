@@ -8,6 +8,8 @@ tags: ["journal"]
 
 # Entropy
 
+<img width="735" height="490" alt="stroll" src="https://github.com/user-attachments/assets/e565df44-c457-42af-8bc0-0910d48edb7c" />
+
 *Everything tends towards disorder unless energy is put into it.*
 
 It's been almost a year and a half, and a lot has changed during this time. I've transitioned from school to college, and honestly, I feel like I wasted most of my first year without doing much to improve my programming skills or knowledge. I kept thinking I had plenty of time and that I could always start tomorrow. Well, tomorrow never really came.
