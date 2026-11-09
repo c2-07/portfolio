@@ -1,7 +1,9 @@
 ---
 title: "Entropy"
-description: "A reflection on college, curiosity, finding the right environment, and rediscovering the joy of building things."
-tags: ["c", "operating systems"]
+description: "Everything tends towards disorder unless energy is put into it"
+pubDate: "10 Nov 2026"
+updateDate: "10 Nov 2026"
+tags: ["journal"]
 ---
 
 # Entropy
